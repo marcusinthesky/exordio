@@ -1,0 +1,6 @@
+[global]
+exclude = ["template/**", ".venv/**", ".devenv/**", ".direnv/**", ".kilo/**", ".claude/**", ".codex/**", ".opencode/**", "site/**", ".cache/**"]
+disable = ["MD013"]
+
+[MD025]
+front-matter-title = ""

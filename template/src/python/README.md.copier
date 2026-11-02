@@ -1,0 +1,47 @@
+---
+description: Python workspace and repository scripts.
+---
+
+# Python
+[% if 'python' in languages %]
+
+The example application imports the shared `example_core` library. Both use a
+`src` layout and share this directory's `uv.lock`; the library ships `py.typed`.
+The sample package identifiers are stable so the complete lock is reusable.
+Rename them together with their imports and regenerate the lock when adopting
+your own domain vocabulary.
+
+Run from the repository root:
+
+```bash
+just python::setup
+just python::run Ada
+just python::check
+```
+
+`setup` installs locked dependencies. Ordinary checks use the local environment
+and cache. Add libraries under `packages/` and executable applications under
+`apps/`, then explicitly run `uv lock` here and commit the updated manifest and
+lock. `just python::build` writes wheels and source archives to ignored `dist/`.
+
+The pinned Nix environment supplies native Ruff and Pyrefly executables. Ruff
+checks style, Pyrefly checks types, and the uv environment supplies pytest to
+exercise the library and real application entry point. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for ownership.
+[% endif %]
+[% if agents %]
+
+## Repository scripts
+
+AgentSync's collision preflight is a zero-dependency PEP 723 script under
+scripts/agent_preflight/. Its interpreter comes from Nix; it does not require the
+Python application workspace. Run it through the root agents commands.
+[% endif %]
+[% if workflows %]
+
+## Workflow scripts
+
+Planning and reference commands use scripts/workflow/script.py with its own
+PEP 723 metadata and sidecar lock. It runs independently of the application
+workspace; use the root creation, sync and check commands.
+[% endif %]

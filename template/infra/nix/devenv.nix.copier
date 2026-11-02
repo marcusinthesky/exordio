@@ -1,0 +1,108 @@
+[% if 'lean' in languages and workflows %]
+{
+  pkgs,
+  inputs,
+  lib,
+  ...
+}:
+[% else %]
+{ pkgs[% if 'lean' in languages %], inputs[% endif %][% if workflows %], lib[% endif %], ... }:
+[% endif %]
+{
+  name = [[ project_slug | tojson ]];
+  packages =
+    assert builtins.elem pkgs.stdenv.hostPlatform.system [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
+    with pkgs;
+    [
+      git
+      just
+      prek
+      rumdl
+      lychee
+      nixfmt
+      statix
+      ripgrep
+[% if workflows or agents or 'python' in languages or 'lean' in languages %]
+      python313
+      uv
+[% endif %]
+[% if 'python' in languages %]
+      ruff
+      pyrefly
+[% endif %]
+[% if workflows %]
+      (callPackage ./pkgs/schematter.nix { })
+[% endif %]
+[% if workflows %]
+      patchelf
+[% endif %]
+[% if 'typescript' in languages %]
+      bun
+[% endif %]
+[% if agents %]
+      (callPackage ./pkgs/agentsync.nix { })
+[% endif %]
+[% if 'lean' in languages %]
+      (import ./pkgs/lean-toolchain.nix {
+        inherit pkgs;
+        inherit (inputs) lean4-nix;
+      })
+      curl
+      gnutar
+      zstd
+      graphviz
+      swig
+      stdenv.cc
+[% endif %]
+[% if 'latex' in languages or 'lean' in languages %]
+      tectonic
+[% endif %]
+[% if 'latex' in languages %]
+      tex-fmt
+[% endif %]
+[% if 'latex' in languages or 'lean' in languages %]
+[% if 'latex' in languages and 'lean' in languages %]
+      (texliveInfraOnly.withPackages (ps: [
+        ps.chktex
+        ps.kpathsea
+      ]))
+[% else %]
+      (texliveInfraOnly.withPackages (ps: [[ '[ ps.chktex ]' if 'latex' in languages else '[ ps.kpathsea ]' ]]))
+[% endif %]
+[% endif %]
+[% if 'reference' in workflows and 'latex' in languages %]
+      pandoc
+[% endif %]
+[% if secrets %]
+      secretspec
+[% endif %]
+    ];
+  env = {
+    UV_PYTHON_DOWNLOADS = "never";
+[% if workflows or agents or 'python' in languages or 'lean' in languages %]
+    UV_PYTHON = "${pkgs.python313}/bin/python3";
+[% endif %]
+[% if 'typescript' in languages %]
+    BIOME_BINARY = "@biomejs/cli-linux-${
+      if pkgs.stdenv.hostPlatform.isx86_64 then "x64" else "arm64"
+    }-musl/biome";
+[% endif %]
+[% if 'lean' in languages %]
+    LEAN_BLUEPRINT_CFLAGS = "-I${pkgs.lib.getDev pkgs.graphviz}/include";
+    LEAN_BLUEPRINT_LDFLAGS = "-L${pkgs.lib.getLib pkgs.graphviz}/lib -L${pkgs.lib.getLib pkgs.graphviz}/lib/graphviz -Wl,-rpath,${pkgs.lib.getLib pkgs.graphviz}/lib:${pkgs.lib.getLib pkgs.graphviz}/lib/graphviz";
+[% endif %]
+[% if workflows %]
+    PROJECT_RUNTIME_LINKER = pkgs.stdenv.cc.bintools.dynamicLinker;
+    PROJECT_RUNTIME_LIBRARIES = lib.makeLibraryPath [
+      pkgs.stdenv.cc.cc.lib
+      pkgs.glibc
+      pkgs.zlib
+    ];
+[% endif %]
+  };
+  enterShell = "unset PYTHONPATH PYTHONHOME VIRTUAL_ENV";
+  enterTest = "just check";
+}

@@ -1,0 +1,91 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+[% for language in languages %]
+mod [[ language ]] 'src/[[ language ]]/justfile'
+[% endfor %]
+[% if agents %]
+mod agents '.agents/justfile'
+[% endif %]
+[% if workflows %]
+workflow := "env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --script src/python/scripts/workflow/script.py"
+[% endif %]
+
+# Discover this project's commands.
+default:
+    @just --list
+
+# Prepare locked dependencies and Git hooks (uses the network).
+setup:
+[% if workflows %]
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --frozen --script src/python/scripts/workflow/script.py prepare
+[% endif %]
+[% for language in languages %]
+    just [[ language ]]::setup
+[% endfor %]
+[% if agents %]
+    just agents::apply
+[% endif %]
+    prek install
+
+# Check source, views and selected languages without repairing files.
+check:
+    bash infra/nix/check.sh
+[% if workflows %]
+    {{ workflow }} check
+[% endif %]
+[% for language in languages %]
+    just [[ language ]]::check
+[% endfor %]
+
+[% if agents %]
+    just agents::check
+[% endif %]
+
+# Run the selected language tests.
+test:
+[% for language in languages %]
+    just [[ language ]]::test
+[% else %]
+    @echo 'No languages selected.'
+[% endfor %]
+
+# Explicitly format sources.
+fmt:
+    nixfmt devenv.nix infra/nix/devenv.nix[% if workflows %] infra/nix/pkgs/schematter.nix[% endif %][% if 'lean' in languages %] infra/nix/pkgs/lean-toolchain.nix[% endif %][% if agents %] infra/nix/pkgs/agentsync.nix[% endif %]
+    rumdl fmt .
+[% for language in languages %]
+    just [[ language ]]::fmt
+[% endfor %]
+[% if workflows %]
+
+# Refresh generated indexes, child views and bibliography.
+sync:
+    {{ workflow }} sync
+[% endif %]
+[% if 'planning' in workflows %]
+
+# Create a plan without overwriting existing content.
+plan-new slug title:
+    {{ workflow }} plan-new "$1" --title "$2"
+
+# Create a task inside an existing plan or task.
+task-new parent slug title:
+    {{ workflow }} task-new "$1" "$2" --title "$3"
+[% endif %]
+[% if 'reference' in workflows %]
+
+# Create a citation record with its directory as citation key.
+reference-new key title:
+    {{ workflow }} reference-new "$1" --title "$2"
+[% endif %]
+
+# Check external links online.
+links:
+    git ls-files -z '*.md' | xargs -0 -r lychee --config lychee.toml --no-progress
+[% if secrets %]
+
+# Resolve credentials only for this explicit subprocess.
+secret-run +command:
+    secretspec run -- "$@"
+[% endif %]

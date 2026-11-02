@@ -1,0 +1,28 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+default:
+    @just --list
+
+setup:
+    bun install --frozen-lockfile
+
+run name="world":
+    bun run apps/example-app/src/main.ts "$1"
+
+build:
+    bun --bun run build
+
+lint:
+    bun --bun run lint
+
+typecheck:
+    bun --bun run typecheck
+
+test:
+    bun --bun run test
+
+check: lint typecheck test build
+
+fmt:
+    bun --bun run format

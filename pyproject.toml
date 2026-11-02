@@ -1,0 +1,25 @@
+[project]
+name = "exordio"
+version = "0.1.0"
+description = "Exordio: start a project, keep it understandable"
+requires-python = ">=3.13,<3.14"
+dependencies = []
+
+[dependency-groups]
+dev = ["copier==9.16.0", "insitu-cli==0.2.0rc2", "pytest>=8.4,<10", "pyyaml>=6.0,<7", "types-pyyaml", "zensical==0.0.64"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = ["integration: needs prepared workflow dependencies or stack tools"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["template"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

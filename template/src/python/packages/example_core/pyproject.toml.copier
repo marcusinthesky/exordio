@@ -1,0 +1,13 @@
+[project]
+name = "example-core"
+version = "0.1.0"
+description = [[ description | to_json(ensure_ascii=False) ]]
+requires-python = ">=3.13,<3.14"
+authors = [{name = [[ author | to_json(ensure_ascii=False) ]]}]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/example_core"]

@@ -1,0 +1,37 @@
+---
+title: References
+description: Bibliographic metadata and compact source context, one directory per citation key.
+---
+
+# References
+
+```bash
+just reference-new shannon1948 "A Mathematical Theory of Communication"
+just sync
+```
+
+Each `KEY/README.md` owns flat CSL (Citation Style Language) metadata such as
+`type`, `title`, `author`, `issued`, `DOI` and `URL`, plus a local `description`
+and optional `links`. Its directory name is the citation key; never author an
+`id` or nested `csl` object. Edit the new record's metadata and body to explain
+what the source establishes. Supporting files may live beside it.
+
+Schema validity does not independently verify publication metadata. Keep the
+source or verification details with the record, and use `just check` to check
+structure, declared links and generated-view freshness.
+
+[% if 'latex' in languages %]
+`just sync` also derives `src/latex/refs.bib` through Pandoc. Cite the directory
+key with `\citep{shannon1948}` in the manuscript. Edit records rather than the
+export; `just check` rejects stale bibliography output.
+
+[% endif %]
+<!-- insitu:begin sql
+id = "reference-records"
+model = "records"
+template = "records.md.j2"
+-->
+
+_No records yet._
+
+<!-- insitu:end -->

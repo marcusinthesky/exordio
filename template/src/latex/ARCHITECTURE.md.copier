@@ -1,0 +1,24 @@
+---
+description: Why one Tectonic engine builds manuscripts and setup owns asset downloads.
+---
+
+# Manuscript build
+
+Tectonic is the single PDF engine. The versioned asset bundle fixes the TeX
+package generation, while devenv pins the renderer, tex-fmt and ChkTeX. Setup
+downloads the manuscript's asset closure into Tectonic's cache; builds use
+`--only-cached` so a normal check does not depend on a TeX service.
+
+The starter uses a generic article class and natbib/plainnat. Publisher templates
+and additional rendering engines belong in explicitly adopted project tooling.
+PDF and intermediate output live under ignored `build/`; canonical manuscript
+text remains directly readable and reviewable in Git.
+
+[% if 'reference' in workflows %]
+CSL records are canonical. The reference exporter writes `refs.bib`, which is a
+derived artifact. This preserves one bibliographic owner while leaving LaTeX
+responsible for rendering citations.
+[% else %]
+The standalone manuscript owns `refs.bib`. Adopting a separate canonical reference
+corpus later requires a reviewed bibliography migration.
+[% endif %]

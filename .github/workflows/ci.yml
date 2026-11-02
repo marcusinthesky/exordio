@@ -1,0 +1,113 @@
+name: Exordio checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tex-prepare:
+    env:
+      TECTONIC_CACHE_DIR: /tmp/exordio-tectonic-cache
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Free hosted runner disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/powershell /opt/ghc
+          df -h /
+      # cache-nix-action requires a store writable by the runner user.
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+        with:
+          nix_version: 2.34.7
+      - uses: nix-community/cache-nix-action@135667ec418502fa5a3598af6fb9eb733888ce6a
+        with:
+          primary-key: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('devenv.lock', 'devenv.nix', 'template/devenv.lock', 'template/infra/nix/devenv.nix.copier', 'template/infra/nix/**') }}
+          restore-prefixes-first-match: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-
+      - run: bash template/infra/nix/install-devenv.sh
+      - run: devenv shell -- just setup
+      - name: Prepare manuscript and blueprint resources sequentially
+        run: |
+          PROJECT_LANGUAGES='["latex"]' devenv shell -- uv run --frozen python -m tests.check_project
+          PROJECT_WORKFLOWS='["reference"]' PROJECT_LANGUAGES='["latex"]' devenv shell -- uv run --frozen python -m tests.check_project
+          PROJECT_LANGUAGES='["lean"]' devenv shell -- uv run --frozen python -m tests.check_project
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tex-cache-x64
+          path: ${{ env.TECTONIC_CACHE_DIR }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+  check:
+    env:
+      TECTONIC_CACHE_DIR: /tmp/exordio-tectonic-cache
+    needs: tex-prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, kind: catalog}
+          - {runner: ubuntu-24.04-arm, kind: catalog}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '[]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '[]', agents: '["codex","claude"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '["planning"]', languages: '[]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '["reference"]', languages: '[]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '["reference"]', languages: '["latex"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["python"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["typescript"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["lean"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["latex"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","lean","latex"]'}
+          - {runner: ubuntu-24.04-arm, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","lean","latex"]'}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Free hosted runner disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /usr/local/share/powershell /opt/ghc
+          df -h /
+      # cache-nix-action requires a store writable by the runner user.
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+        with:
+          nix_version: 2.34.7
+      - uses: nix-community/cache-nix-action@135667ec418502fa5a3598af6fb9eb733888ce6a
+        with:
+          primary-key: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('devenv.lock', 'devenv.nix', 'template/devenv.lock', 'template/infra/nix/devenv.nix.copier', 'template/infra/nix/**') }}
+          restore-prefixes-first-match: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cache/uv
+            ~/.cache/mathlib
+            ~/.bun/install/cache
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ matrix.kind }}-${{ hashFiles('**/uv.lock', '**/*.py.lock', '**/bun.lock', '**/lake-manifest.json') }}
+      - name: Restore prepared TeX resources
+        if: matrix.kind == 'project' && matrix.runner == 'ubuntu-24.04'
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          name: tex-cache-x64
+          path: ${{ env.TECTONIC_CACHE_DIR }}/
+      - run: bash template/infra/nix/install-devenv.sh
+      - run: devenv shell -- just setup
+      - if: matrix.kind == 'catalog'
+        run: devenv shell -- just check
+      - if: matrix.kind == 'project'
+        env:
+          PROJECT_WORKFLOWS: ${{ matrix.workflows }}
+          PROJECT_AGENTS: ${{ matrix.agents || 'null' }}
+          PROJECT_LANGUAGES: ${{ matrix.languages }}
+        run: devenv shell -- uv run --frozen python -m tests.check_project
+      - name: Upload documentation preview
+        if: matrix.kind == 'catalog'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: exordio-docs-${{ runner.arch }}
+          path: site/
+          if-no-files-found: error
+          retention-days: 7

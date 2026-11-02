@@ -1,0 +1,18 @@
+[project]
+name = "example-app"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = ["example-core"]
+
+[project.scripts]
+example-app = "example_app:main"
+
+[tool.uv.sources]
+example-core = {workspace = true}
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/example_app"]

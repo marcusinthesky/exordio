@@ -1,0 +1,51 @@
+[% macro tex(value) -%]
+[% for character in value -%]
+[[ {'\\': '\\textbackslash{}', '{': '\\{', '}': '\\}', '$': '\\$', '&': '\\&', '#': '\\#', '_': '\\_', '%': '\\%', '~': '\\textasciitilde{}', '^': '\\textasciicircum{}'}.get(character, character) ]]
+[%- endfor -%]
+[%- endmacro -%]
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage[authoryear]{natbib}
+
+\title{[[ tex(project_name) ]]}
+\author{[[ tex(author) ]]}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  A small manuscript with an equation and a reproducible build.
+\end{abstract}
+
+\section{Introduction}
+
+This document is the starting point for your paper.
+[% if 'reference' not in workflows %]
+The bibliography contains a real example reference to Shannon's
+communication theory~\citep{shannon1948}.
+[% else %]
+Research reference records are the canonical bibliography. Create a reference,
+export the bibliography, then cite its stable key here.
+[% endif %]
+
+\section{An example identity}
+
+For real numbers $x$ and $y$,
+\begin{equation}
+  {(x+y)}^2 = x^2 + 2xy + y^2.
+\end{equation}
+
+[% if 'reference' not in workflows %]
+\bibliographystyle{plainnat}
+\bibliography{refs}
+[% else %]
+% Bibliography output is produced from the reference records.
+% Uncomment after adding records and running `just sync`:
+% \bibliographystyle{plainnat}
+% \bibliography{refs}
+[% endif %]
+
+\end{document}

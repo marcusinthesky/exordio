@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Exordio icon</title>
+  <desc id="desc">An open spellbook beneath a rising spark, sealed in an antique gold circle.</desc>
+  <circle cx="64" cy="64" r="62" fill="#221e2d"/>
+  <circle cx="64" cy="64" r="55" fill="none" stroke="#bd9654" stroke-width="1.5"/>
+  <g stroke="#e1bd78" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 56Q45 51 64 64Q83 51 102 56V89Q83 84 64 97Q45 84 26 89Z" fill="#302a3c"/>
+    <path d="M64 64V97M33 64Q45 63 56 69M33 74Q45 73 56 79M72 69Q83 63 95 64M72 79Q83 73 95 74" fill="none"/>
+    <path d="M74 53L89 38" fill="none"/>
+  </g>
+  <path d="M64 18L68 30L80 34L68 38L64 50L60 38L48 34L60 30Z" fill="#f7e5b9"/>
+  <g fill="#bd9654">
+    <circle cx="35" cy="40" r="2"/>
+    <circle cx="91" cy="29" r="2"/>
+    <circle cx="64" cy="109" r="2"/>
+  </g>
+</svg>

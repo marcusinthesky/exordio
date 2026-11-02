@@ -1,0 +1,42 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+bundle := "https://data1.fullyjustified.net/tlextras-2022.0r0.tar"
+
+default:
+    @just --list
+
+# Explicit network step: provision locked sources and their compiled cache.
+setup: cache
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV CFLAGS="$LEAN_BLUEPRINT_CFLAGS" LDFLAGS="$LEAN_BLUEPRINT_LDFLAGS" uv sync --project blueprint --frozen
+    just blueprint-web
+    mkdir -p blueprint/print
+    cd blueprint/src && bash ../../../../infra/nix/retry-tex-setup.sh tectonic --untrusted --bundle "{{ bundle }}" --keep-logs --outdir ../print print.tex
+
+cache *modules:
+    python3 check_setup.py --toolchain-only
+    lake exe cache get Mathlib.Basic.Real.Basic Mathlib.Tactic.Ring "$@"
+
+build:
+    python3 check_setup.py
+    LAKE_NO_CACHE=true lake --no-cache --wfail build
+
+test: build
+
+blueprint-web: build
+    LAKE_NO_CACHE=true lake --no-cache --wfail build :blueprint
+    mkdir -p blueprint/web
+    cd blueprint/src && env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --project .. --offline --frozen plastex -c plastex.cfg web.tex 2>&1 | tee ../web/build.log
+    if rg -n 'WARNING: (File not found|unrecognized command)|WARNING: Using default renderer for inputlean' blueprint/web/build.log; then echo 'Invalid blueprint input' >&2; exit 1; fi
+
+blueprint-pdf: blueprint-web
+    mkdir -p blueprint/print
+    cd blueprint/src && tectonic --untrusted --only-cached --bundle "{{ bundle }}" --keep-logs --outdir ../print print.tex
+    if rg -n 'Reference.+undefined|There were undefined|multiply-defined|Multiply defined' blueprint/print/print.log; then echo 'Unresolved blueprint references' >&2; exit 1; fi
+
+check: blueprint-pdf
+    git diff --check -- .
+
+# Lean follows Mathlib style; no automatic formatter is installed.
+fmt:
+    git diff --check -- .

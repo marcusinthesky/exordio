@@ -1,0 +1,28 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# The versioned bundle is shared by setup and cached builds.
+bundle := "https://data1.fullyjustified.net/tlextras-2022.0r0.tar"
+
+default:
+    @just --list
+
+# Explicit network step: fetch TeX resources needed by the current manuscript.
+setup:
+    mkdir -p build
+    bash ../../infra/nix/retry-tex-setup.sh tectonic --untrusted --bundle "{{ bundle }}" --keep-logs --outdir build main.tex
+
+build:
+    mkdir -p build
+    tectonic --untrusted --only-cached --bundle "{{ bundle }}" --keep-logs --outdir build main.tex
+    if rg -n 'Citation.+undefined|Reference.+undefined|There were undefined|multiply-defined|Multiply defined' build/main.log; then echo 'Unresolved citations, references or duplicate labels' >&2; exit 1; fi
+
+lint:
+    tex-fmt --check main.tex
+    chktex -q -n 1 -n 8 -n 46 main.tex
+
+check: lint build
+
+test: build
+
+fmt:
+    tex-fmt main.tex

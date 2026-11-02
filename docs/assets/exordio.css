@@ -1,0 +1,177 @@
+/* Parchment by day, a candlelit library by night. No remote fonts or images. */
+:root {
+  --exordio-heading-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+
+[data-md-color-scheme="default"] {
+  color-scheme: light;
+  --md-default-bg-color: #f8f3e8;
+  --md-default-fg-color: #342e3b;
+  --md-default-fg-color--light: #655c6b;
+  --md-default-fg-color--lighter: #b8ab96;
+  --md-default-fg-color--lightest: #e7ddcb;
+  --md-primary-fg-color: #76531e;
+  --md-primary-bg-color: #f8f3e8;
+  --md-accent-fg-color: #754067;
+  --md-accent-fg-color--transparent: #75406712;
+  --md-typeset-a-color: #76531e;
+  --md-code-bg-color: #efe7d8;
+  --md-code-fg-color: #3f3549;
+  --exordio-rule: #d5bf94;
+  --exordio-glow: #bd965418;
+  --exordio-panel: #fffaf0;
+}
+
+[data-md-color-scheme="slate"] {
+  color-scheme: dark;
+  --md-default-bg-color: #1d1a25;
+  --md-default-fg-color: #e9dfcc;
+  --md-default-fg-color--light: #bdb1c5;
+  --md-default-fg-color--lighter: #756a80;
+  --md-default-fg-color--lightest: #3b3347;
+  --md-primary-fg-color: #e1bd78;
+  --md-primary-bg-color: #1d1a25;
+  --md-accent-fg-color: #dfb1d3;
+  --md-accent-fg-color--transparent: #dfb1d318;
+  --md-typeset-a-color: #e1bd78;
+  --md-code-bg-color: #292333;
+  --md-code-fg-color: #eee1c8;
+  --exordio-rule: #675338;
+  --exordio-glow: #bd965410;
+  --exordio-panel: #241f2e;
+}
+
+body {
+  background-image: radial-gradient(ellipse at 50% 0, var(--exordio-glow), transparent 65%);
+}
+
+.md-header {
+  background: #221e2d;
+  color: #f2e7d2;
+  border-bottom: 1px solid #8e7042;
+}
+
+.md-header__topic:first-child {
+  font-family: var(--exordio-heading-font);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+}
+
+.md-header__button.md-logo img {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  color: var(--md-default-fg-color);
+  font-family: var(--exordio-heading-font);
+  font-weight: 500;
+}
+
+.md-typeset h1 {
+  font-size: 2.35em;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.md-typeset h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--exordio-rule);
+  font-size: 1.6em;
+}
+
+.md-typeset a:not(.headerlink) {
+  text-decoration-color: var(--exordio-rule);
+  text-underline-offset: 0.18em;
+}
+
+.md-typeset a:not(.headerlink):hover {
+  text-decoration: underline;
+}
+
+.md-typeset pre {
+  border: 1px solid var(--exordio-rule);
+  border-radius: 0.3rem;
+}
+
+.md-clipboard {
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset table:not([class]) {
+  background: var(--exordio-panel);
+  border-color: var(--exordio-rule);
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--md-code-bg-color);
+}
+
+.md-nav__link--active {
+  color: var(--md-primary-fg-color);
+}
+
+.exordio-intro {
+  position: relative;
+  margin: 0 0 2.5rem;
+  padding: 1.8rem 1.2rem 1.2rem;
+  border: 1px solid var(--exordio-rule);
+  background: radial-gradient(ellipse at top, var(--exordio-glow), transparent 75%), var(--exordio-panel);
+  text-align: center;
+}
+
+.exordio-intro::before,
+.exordio-intro::after {
+  position: absolute;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1px solid var(--exordio-rule);
+  background: var(--md-default-bg-color);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.exordio-intro::before {
+  top: -0.35rem;
+  left: calc(50% - 0.35rem);
+}
+
+.exordio-intro::after {
+  bottom: -0.35rem;
+  left: calc(50% - 0.35rem);
+}
+
+.exordio-intro img {
+  display: block;
+  width: min(100%, 24rem);
+  height: auto;
+  margin: 0 auto;
+}
+
+.md-typeset .exordio-motto {
+  margin: 0.7rem 0 0;
+  color: var(--md-primary-fg-color);
+  font-family: var(--exordio-heading-font);
+  font-size: 1.4em;
+  font-style: italic;
+}
+
+.exordio-intro p:last-child {
+  max-width: 26rem;
+  margin: 0.6rem auto 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.9em;
+}
+
+@media (max-width: 44.984375em) {
+  .exordio-intro {
+    margin-bottom: 1.8rem;
+    padding: 1.2rem 0.9rem;
+  }
+
+  .md-typeset h1 {
+    font-size: 2em;
+  }
+}

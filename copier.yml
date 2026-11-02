@@ -1,0 +1,114 @@
+_min_copier_version: "9.16.0"
+_subdirectory: template
+_templates_suffix: .copier
+_envops:
+  variable_start_string: "[["
+  variable_end_string: "]]"
+  block_start_string: "[%"
+  block_end_string: "%]"
+  comment_start_string: "[#"
+  comment_end_string: "#]"
+  keep_trailing_newline: true
+  trim_blocks: true
+  lstrip_blocks: true
+
+project_name:
+  type: str
+  help: What should your project be called?
+  default: My project
+  validator: "[% if not project_name.strip() %]Enter a project name.[% endif %]"
+project_slug:
+  type: str
+  help: A short lowercase name for tools.
+  default: "[[ project_name | lower | replace(' ', '-') ]]"
+  validator: "[% if not (project_slug | regex_search('^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$')) %]Use lowercase letters, digits and single hyphens, starting with a letter.[% endif %]"
+description:
+  type: str
+  help: One sentence explaining your project.
+  default: A project maintained in Git.
+author:
+  type: str
+  default: Project contributors
+workflows:
+  type: str
+  help: Optional Markdown workflows. Choose either, both, or neither.
+  multiselect: true
+  choices:
+    "Planning: nested tasks and a roadmap": planning
+    "References: citation records and backlinks": reference
+  default: []
+languages:
+  type: str
+  help: Optional languages. Each works independently.
+  multiselect: true
+  choices:
+    "Python: a typed library and application": python
+    "TypeScript: a Bun library and CLI": typescript
+    "Lean4: Mathlib, LeanArchitect and LeanBlueprint": lean
+    "LaTeX: a Tectonic article": latex
+  default: []
+
+agents:
+  type: str
+  help: Optional native agent configuration, projected from shared instructions.
+  multiselect: true
+  choices:
+    Codex: codex
+    Claude Code: claude
+  default: []
+secrets:
+  type: bool
+  help: Add explicit SecretSpec commands? Shell entry never loads credentials.
+  default: false
+
+_exclude:
+  - .git
+  - '**/.venv/**'
+  - '**/.devenv/**'
+  - '**/.direnv/**'
+  - '**/__pycache__/**'
+  - '**/*.pyc'
+  - '**/*.paux'
+  - '**/lean_decls'
+  - '**/node_modules/**'
+  - '**/.lake/**'
+  - '**/.insitu/**'
+  - '**/build/**'
+  - '**/dist/**'
+  - '**/web/**'
+  - '**/print/**'
+  - '**/.pytest_cache/**'
+  - '**/.ruff_cache/**'
+  - "[% if not workflows %].context[% endif %]"
+  - "[% if not workflows %]infra/schemas[% endif %]"
+  - "[% if not workflows %]insitu[% endif %]"
+  - "[% if not workflows %]insitu.toml[% endif %]"
+  - "[% if not workflows %]infra/nix/pkgs/schematter.nix[% endif %]"
+  - "[% if not workflows %]infra/nix/prepare-runtime.sh[% endif %]"
+  - "[% if 'planning' not in workflows %]ROADMAP.md[% endif %]"
+  - "[% if 'planning' not in workflows %].context/plan[% endif %]"
+  - "[% if 'reference' not in workflows %].context/reference[% endif %]"
+  - "[% if 'python' not in languages and not agents and not workflows %]src/python[% endif %]"
+  - "[% if 'python' not in languages %]src/python/apps[% endif %]"
+  - "[% if 'python' not in languages %]src/python/packages[% endif %]"
+  - "[% if 'python' not in languages %]src/python/pyproject.toml[% endif %]"
+  - "[% if 'python' not in languages %]src/python/uv.lock[% endif %]"
+  - "[% if 'python' not in languages %]src/python/justfile[% endif %]"
+  - "[% if 'python' not in languages %]src/python/ARCHITECTURE.md[% endif %]"
+  - "[% if 'typescript' not in languages %]src/typescript[% endif %]"
+  - "[% if 'lean' not in languages %]src/lean[% endif %]"
+  - "[% if 'lean' not in languages %]infra/nix/pkgs/lean-toolchain.nix[% endif %]"
+  - "[% if 'latex' not in languages %]src/latex[% endif %]"
+  - "[% if not agents %].agents[% endif %]"
+  - "[% if not agents %]infra/nix/pkgs/agentsync.nix[% endif %]"
+  - "[% if not agents %]src/python/scripts/agent_preflight[% endif %]"
+  - "[% if not workflows %]src/python/scripts/workflow[% endif %]"
+  - "[% if not secrets %]secretspec.toml[% endif %]"
+_message_after_copy: |
+  Enter your project, initialize Git, then run:
+    bash infra/nix/install-devenv.sh
+    devenv shell -- just setup
+  Follow README.md for your first useful change.
+_message_after_update: |
+  Review the diff, then run setup, sync (when available), and check.
+  Removing a feature requires a manual migration; preserve your content first.

@@ -1,0 +1,31 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+default:
+    @just --list
+
+# Install exactly the committed workspace and build dependencies.
+setup:
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv sync --locked --all-packages
+
+run name="world":
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --package example-app python -m example_app "$1"
+
+lint:
+    ruff check .
+    ruff format --check .
+
+typecheck:
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --all-packages pyrefly check
+
+test:
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --all-packages pytest
+
+build:
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv build --python .venv/bin/python --offline --no-build-isolation --all-packages
+
+check: lint typecheck test build
+
+fmt:
+    ruff check --fix .
+    ruff format .

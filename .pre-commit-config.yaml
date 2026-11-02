@@ -1,0 +1,55 @@
+default_install_hook_types: [pre-commit]
+default_stages: [pre-commit]
+exclude: ^template/
+repos:
+  - repo: builtin
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+        args: [--assume-in-merge]
+      - id: detect-private-key
+      - id: check-case-conflict
+  - repo: local
+    hooks:
+      - id: actionlint
+        name: GitHub Actions workflows
+        entry: actionlint .github/workflows/ci.yml template/.github/workflows/ci.yml
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: python-lint
+        name: Python lint
+        entry: ruff check .
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: python-format
+        name: Python formatting
+        entry: ruff format --check .
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: markdown
+        name: Markdown lint and local links
+        entry: rumdl check .
+        language: system
+        pass_filenames: false
+        types: [markdown]
+      - id: nix
+        name: Nix formatting
+        entry: nixfmt --check
+        language: system
+        types: [nix]
+      - id: nix-lint
+        name: Nix anti-patterns
+        entry: statix check devenv.nix
+        language: system
+        pass_filenames: false
+        types: [nix]
+      - id: text-check
+        name: Whitespace and final newlines
+        entry: bash template/infra/nix/check-text.sh
+        language: system
+        types: [text]

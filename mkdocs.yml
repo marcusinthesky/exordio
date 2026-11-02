@@ -1,0 +1,40 @@
+site_name: Exordio
+site_description: A spell for good beginnings. Reproducible projects, understandable tools.
+site_url: https://marcusinthesky.github.io/exordio/
+repo_url: https://github.com/marcusinthesky/exordio
+docs_dir: docs
+site_dir: site
+theme:
+  logo: assets/exordio-icon.svg
+  favicon: assets/exordio-icon.svg
+  font: false
+  features:
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+nav:
+  - Your first plan: index.md
+  - Choose features: features.md
+  - Everyday work: daily-use.md
+  - Updates: updates.md
+  - Troubleshooting: troubleshooting.md
+  - Contribute: https://github.com/marcusinthesky/exordio/blob/main/CONTRIBUTING.md
+  - Architecture: https://github.com/marcusinthesky/exordio/blob/main/ARCHITECTURE.md
+plugins:
+  - search
+extra_css:
+  - assets/exordio.css
+validation:
+  invalid_links: true
+  invalid_link_anchors: true

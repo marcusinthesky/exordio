@@ -1,0 +1,44 @@
+source_dir = "."
+default_agents = [[ agents | tojson ]]
+
+[gitignore]
+enabled = false
+
+[% if 'codex' in agents %]
+[agents.codex]
+enabled = true
+[agents.codex.targets.instructions]
+source = "AGENTS.md"
+destination = "AGENTS.md"
+type = "symlink"
+[agents.codex.targets.settings]
+source = "codex.toml"
+destination = ".codex/config.toml"
+type = "symlink"
+[agents.codex.targets.skills]
+source = "skills"
+destination = ".codex/skills"
+type = "symlink"
+[% endif %]
+[% if 'claude' in agents %]
+[agents.claude]
+enabled = true
+[% if 'codex' not in agents %]
+[agents.claude.targets.root-instructions]
+source = "AGENTS.md"
+destination = "AGENTS.md"
+type = "symlink"
+[% endif %]
+[agents.claude.targets.instructions]
+source = "AGENTS.md"
+destination = "CLAUDE.md"
+type = "symlink"
+[agents.claude.targets.settings]
+source = "claude-settings.json"
+destination = ".claude/settings.json"
+type = "symlink"
+[agents.claude.targets.skills]
+source = "skills"
+destination = ".claude/skills"
+type = "symlink"
+[% endif %]

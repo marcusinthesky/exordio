@@ -1,0 +1,116 @@
+---
+description: [[ description | to_json(ensure_ascii=False) ]]
+---
+
+# [[ project_name ]]
+
+[[ description ]]
+
+## Get ready
+
+Use Linux x86-64 or ARM64 with Git and Nix. Keep uv available for Copier updates.
+Initial setup downloads locked dependencies; later checks use prepared inputs.
+
+```bash
+git init -b main
+bash infra/nix/install-devenv.sh
+devenv shell
+just setup
+```
+
+Run `just --list` to discover this project's commands.
+[% if 'planning' in workflows %]
+
+## Your first plan
+
+```bash
+just plan-new project "Project plan"
+just task-new .context/plan/project first-step "Make the first useful change"
+just sync
+just check
+```
+
+Open [ROADMAP.md](ROADMAP.md) and follow the plan link. Edit the task's frontmatter
+and synchronize to refresh its parent's table. Each parent shows immediate
+children; its own status is authored separately.
+[% endif %]
+[% if 'reference' in workflows %]
+
+## Your first reference
+
+```bash
+just reference-new first-source "First source"
+just sync
+just check
+```
+
+Edit the source's flat CSL metadata in
+`.context/reference/first-source/README.md`. Its directory is the citation key.
+[% if 'latex' in languages %]
+Synchronization derives `src/latex/refs.bib` from these records.
+[% endif %]
+[% endif %]
+[% if languages %]
+
+## Try the code
+
+```bash
+[% if 'python' in languages %]
+just python::run Ada
+[% endif %]
+[% if 'typescript' in languages %]
+just typescript::run Ada
+[% endif %]
+[% if 'lean' in languages %]
+just lean::build
+just lean::blueprint-web
+[% endif %]
+[% if 'latex' in languages %]
+just latex::build
+[% endif %]
+```
+[% endif %]
+[% if not workflows and not languages %]
+
+Replace this introduction with your project's purpose, then run `just check`.
+Add tools when the project has a concrete need.
+[% endif %]
+
+## Find your way
+
+[% if workflows %]
+- [Project context](.context/README.md) explains the installed workflows.
+[% endif %]
+[% for language in languages %]
+- [The [[ language | capitalize ]] workspace](src/[[ language ]]/README.md) explains code and commands.
+[% endfor %]
+[% if agents %]
+- [AgentSync](.agents/README.md) manages shared instructions and native configuration.
+[% endif %]
+- [Architecture](ARCHITECTURE.md) explains ownership and updates.
+
+Edit source[% if workflows %], run `just sync`[% endif %], then `just check`.
+Formatting and synchronization are explicit writes. External links run separately
+through `just links`.
+[% if secrets %]
+
+SecretSpec resolves credentials only for `just secret-run COMMAND`.
+Configure a provider and declarations when needed; shell entry never loads secrets.
+[% endif %]
+
+## Update
+
+Commit local work, then run:
+
+```bash
+env -u PYTHONPATH -u PYTHONHOME uvx --from copier==9.16.0 copier update
+```
+
+Review the diff and conflicts, run setup[% if workflows %], sync[% endif %]
+and check. Copier selects the latest stable tag from the source saved in
+`.copier-answers.yml`; add `--vcs-ref TAG` to choose a specific release.
+Adding capabilities preserves saved selections. Removing them
+requires manual migration because Copier can remove previously owned paths.
+Actual records remain project-owned.
+
+This project started with [Exordio](https://github.com/marcusinthesky/exordio).
