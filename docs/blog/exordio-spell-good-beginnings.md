@@ -21,6 +21,7 @@ With more code is being written than ever, the infrastructure, tooling and relia
 As agents accelerate software production, these distinctions become increasingly important. The bottleneck is shifting away from generating code and towards verifying that code, maintaining the knowledge behind it, and ensuring that code can be hosted and scaled, securely. It is no surprise then that PaaS vendors like Vercel, Netlify and Fly.io are seeing record growth alongside the almost explosion in rust adoption, as developers combat the chaos of agentic coding with formalism of type-checking, static analysis tools, and even formal software verification.
 
 ## What Remains? The Repository
+
 As agents become more capable, an important question is what remains when the conversation ends, the model changes, or another agent inherits the project. Source code is only one part of the answer. The dependencies, architectural decisions, project knowledge, validation rules and operating environment all influence whether subsequent work can be understood and reproduced.
 
 This is where repo engineering comes in: treating the repository not just as a place to store code, but as the source of truth for the agent's knowledge, operating environment and validation rules. Rather than relying on prompts to encourage correct behaviour, developers can encode assumptions as schemas, lock dependencies, validate references, synchronise agent configurations and restrict access to secrets. The model remains probabilistic, but the surrounding system introduces deterministic checks.
