@@ -28,6 +28,9 @@ nav:
   - Choose features: features.md
   - Everyday work: daily-use.md
   - Updates: updates.md
+  - Blog:
+      - All posts: blog/index.md
+      - 'Exordio: A spell for good beginnings': blog/exordio-spell-good-beginnings.md
   - Troubleshooting: troubleshooting.md
   - Contribute: https://github.com/marcusinthesky/exordio/blob/main/CONTRIBUTING.md
   - Architecture: https://github.com/marcusinthesky/exordio/blob/main/ARCHITECTURE.md
