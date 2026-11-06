@@ -1,6 +1,7 @@
 name: Exordio checks
 on:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
   push:
     branches: [main]
     tags: ['v*']
@@ -11,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   tex-prepare:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     env:
       TECTONIC_CACHE_DIR: /tmp/exordio-tectonic-cache
     runs-on: ubuntu-24.04
@@ -44,6 +46,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   check:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     env:
       TECTONIC_CACHE_DIR: /tmp/exordio-tectonic-cache
     needs: tex-prepare
