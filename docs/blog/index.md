@@ -10,6 +10,6 @@ Essays on repository engineering, reproducible development, and the practical wo
 
 ### [Exordio: A spell for good beginnings](exordio-spell-good-beginnings.md)
 
-*3 November 2026 · Marcus Gawronsky*
+3 November 2026 · Marcus Gawronsky
 
 Why the repository, its knowledge, tools, environment and validation rules should form the durable foundation of an AI-assisted project.

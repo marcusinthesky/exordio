@@ -1,0 +1,5 @@
+# Conventional Tach architecture analysis, initially without enforced module boundaries.
+# Add [[modules]] entries as the workspace grows; no implicit auto-generated rules.
+source_roots = ["apps/example_app/src", "packages/example_core/src"]
+ignore_type_checking_imports = false
+forbid_circular_dependencies = true

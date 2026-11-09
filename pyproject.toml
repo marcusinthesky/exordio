@@ -6,14 +6,23 @@ requires-python = ">=3.13,<3.14"
 dependencies = []
 
 [dependency-groups]
-dev = ["copier==9.16.0", "insitu-cli==0.2.0rc2", "pytest>=8.4,<10", "pyyaml>=6.0,<7", "types-pyyaml", "zensical==0.0.64"]
+dev = [
+  "copier==9.16.0",
+  "insitu-cli==0.2.0rc2",
+  "pytest>=8.4,<10",
+  "pytest-xdist>=3.8,<5",
+  "pytest-testmon>=2.3,<3",
+  "pyyaml>=6.0,<7",
+  "types-pyyaml",
+  "zensical==0.0.64",
+]
 
 [tool.uv]
 package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --strict-config --strict-markers"
 markers = ["integration: needs prepared workflow dependencies or stack tools"]
 
 [tool.ruff]

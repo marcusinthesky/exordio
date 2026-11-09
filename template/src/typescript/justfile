@@ -19,6 +19,9 @@ lint:
 typecheck:
     bun --bun run typecheck
 
+knip:
+    bun --bun run knip
+
 test:
     bun --bun run test
 

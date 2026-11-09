@@ -72,6 +72,42 @@ def exercise(
     before = git(repo, "diff", "--binary", "HEAD")
     runtime(repo, "check", offline=True)
     assert git(repo, "diff", "--binary", "HEAD") == before, "Checks rewrote tracked content"
+    # Exercise the *generated commands* with deliberate defects, not just clean fixtures.
+    # Each probe is restored, then the no-mutation invariant is checked again.
+    for language, target, fault, command in (
+        (
+            "python",
+            repo / "src/python/packages/example_core/src/example_core/__init__.py",
+            "\\nimport exordio_unused_quality_probe\\n",
+            "python::lint",
+        ),
+        (
+            "typescript",
+            repo / "src/typescript/packages/core/src/index.ts",
+            "\\nconst exordioTypeProbe: string = 123;\\n",
+            "typescript::typecheck",
+        ),
+        (
+            "typescript",
+            repo / "src/typescript/packages/core/src/index.ts",
+            "\\nexport function exordioDeadExportProbe(): number { return 7; }\\n",
+            "typescript::knip",
+        ),
+    ):
+        if language not in languages:
+            continue
+        original = target.read_bytes()
+        try:
+            target.write_bytes(original + fault.replace("\\n", "\n").encode())
+            try:
+                runtime(repo, command, offline=True)
+            except subprocess.CalledProcessError:
+                pass
+            else:
+                raise AssertionError(f"{command} accepted the injected {language} defect")
+        finally:
+            target.write_bytes(original)
+    assert git(repo, "diff", "--binary", "HEAD") == before, "Quality probes changed tracked content"
 
 
 def main() -> None:

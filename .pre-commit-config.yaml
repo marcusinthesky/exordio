@@ -13,9 +13,15 @@ repos:
       - id: check-case-conflict
   - repo: local
     hooks:
+      - id: shellcheck
+        name: ShellCheck templated runtime scripts
+        entry: bash -c 'shellcheck template/infra/nix/*.sh'
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: actionlint
         name: GitHub Actions workflows
-        entry: actionlint .github/workflows/ci.yml template/.github/workflows/ci.yml
+        entry: bash -c 'actionlint .github/workflows/*.yml template/.github/workflows/*.yml'
         language: system
         pass_filenames: false
         always_run: true

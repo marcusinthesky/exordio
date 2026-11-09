@@ -42,6 +42,11 @@ def test_supported_compositions(
             "secrets": maximal,
         },
     )
+    # Generated CI must skip compute-heavy jobs while a PR remains a draft.
+    ci = (repo / ".github/workflows/ci.yml").read_text()
+    assert not (repo / "QUALITY.md").exists()
+    assert "ready_for_review" in ci
+    assert "github.event.pull_request.draft == false" in ci
     data = (repo / ".copier-answers.yml").read_bytes()
     assert data.endswith(b"\n") and not data.endswith(b"\n\n")
     assert answers(repo)["workflows"] == workflows

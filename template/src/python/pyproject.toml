@@ -13,18 +13,22 @@ members = ["apps/*", "packages/*"]
 dev = [
   "hatchling==1.27.0",
   "pytest==9.1.1",
+  "pytest-xdist>=3.8,<5",
+  "pytest-testmon>=2.3,<3",
+  "tach==0.35.3",
 ]
 
 [tool.ruff]
 target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
 
 [tool.pyrefly]
+preset = "strict"
 project-includes = ["apps", "packages"]
 python-version = "3.13"
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "apps"]
-addopts = ["--import-mode=importlib"]
+addopts = ["--import-mode=importlib", "--strict-config", "--strict-markers"]

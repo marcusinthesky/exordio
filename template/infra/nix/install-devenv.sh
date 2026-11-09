@@ -5,6 +5,9 @@ cd "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
 
 # Install the CLI version required by the locked modules. Upstream may bump
 # its CLI version before updating src/modules/latest-version on the same branch.
+# The single-quoted argument is Nix source: ${input.rev} belongs to Nix interpolation,
+# not to Bash. Keep the quotes so Bash cannot expand Nix's variables.
+# shellcheck disable=SC2016
 version=$(nix eval --impure --raw --expr '
   let input = (builtins.fromJSON (builtins.readFile ./devenv.lock)).nodes.devenv.locked;
       modules = builtins.getFlake "github:cachix/devenv/${input.rev}?dir=src/modules";

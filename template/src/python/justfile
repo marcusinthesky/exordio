@@ -18,13 +18,22 @@ lint:
 typecheck:
     env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --all-packages pyrefly check
 
+# Local impacted-test selection, with a bounded number of workers.
+test-changed:
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --all-packages pytest -q -n 2 --testmon
+
+# The test and CI gates never use affected-test selection.
 test:
-    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --all-packages pytest
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen --all-packages pytest -q -n 2 --no-testmon
+
+# Tach starts without mandatory module declarations; add [[modules]] deliberately.
+tach:
+    env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv run --offline --frozen tach check
 
 build:
     env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV uv build --python .venv/bin/python --offline --no-build-isolation --all-packages
 
-check: lint typecheck test build
+check: lint typecheck tach test build
 
 fmt:
     ruff check --fix .

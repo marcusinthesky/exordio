@@ -1,8 +1,10 @@
 name: CI
 on:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
   push:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -10,6 +12,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   check:
+    # Draft PRs emit a skipped run; compute-heavy checks only run when ready.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     env:
       TECTONIC_CACHE_DIR: /tmp/exordio-tectonic-cache
     strategy:
@@ -18,6 +22,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
       - name: Free hosted runner disk space
         run: |
           df -h /
@@ -28,10 +34,12 @@ jobs:
         with:
           nix_version: 2.34.7
       - uses: nix-community/cache-nix-action@135667ec418502fa5a3598af6fb9eb733888ce6a
+        if: github.event_name != 'pull_request'
         with:
           primary-key: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('devenv.lock', 'devenv.nix', 'infra/nix/**') }}
           restore-prefixes-first-match: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        if: github.event_name != 'pull_request'
         with:
           path: |
             ~/.cache/uv
