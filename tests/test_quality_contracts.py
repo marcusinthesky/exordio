@@ -28,7 +28,8 @@ def test_generated_workflow_skips_drafts_and_supports_ready_review(
     assert "converted_to_draft" in workflow
     assert "github.event.pull_request.draft == false" in workflow
     assert "branches: [main]" in workflow
-    assert (destination / "QUALITY.md").exists()
+    assert not (destination / "QUALITY.md").exists()
+    assert (destination / "src/typescript/knip.json").exists()
     assert json.loads((destination / "renovate.json").read_text())["dependencyDashboard"]
 
 

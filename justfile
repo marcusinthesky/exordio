@@ -14,7 +14,15 @@ setup:
 
 # Run tests, optionally selecting a file or pytest options.
 test *args:
-    {{ uv }} pytest "$@"
+    {{ uv }} pytest --no-testmon "$@"
+
+# Affected-test selection is local only; never use it for the main CI gate.
+test-changed *args:
+    {{ uv }} pytest --testmon "$@"
+
+# Full tests, with bounded xdist concurrency. Use after a dependency change.
+test-parallel *args:
+    {{ uv }} pytest --no-testmon -n 2 "$@"
 
 # Validate sources, generated projects and documentation.
 check:

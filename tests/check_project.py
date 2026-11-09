@@ -87,6 +87,12 @@ def exercise(
             "\\nconst exordioTypeProbe: string = 123;\\n",
             "typescript::typecheck",
         ),
+        (
+            "typescript",
+            repo / "src/typescript/packages/core/src/index.ts",
+            "\\nexport function exordioDeadExportProbe(): number { return 7; }\\n",
+            "typescript::knip",
+        ),
     ):
         if language not in languages:
             continue
