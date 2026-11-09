@@ -21,12 +21,23 @@ jobs:
         run: |
           set -euo pipefail
           uv lock --project .
+          # Copier emits this package manifest during project generation.
+          # Make an ephemeral equivalent so the template uv.lock can be resolved.
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("template/src/python/packages/example_core")
+          src = (path / "pyproject.toml.copier").read_text()
+          src = src.replace('[[ description | to_json(ensure_ascii=False) ]]', '"Example core"')
+          src = src.replace('[[ author | to_json(ensure_ascii=False) ]]', '"Project contributors"')
+          (path / "pyproject.toml").write_text(src)
+          PY
           uv lock --project template/src/python
           (cd template/src/typescript && bun install --lockfile-only)
           uv lock --project . --check
           uv lock --project template/src/python --check
           (cd template/src/typescript && bun install --frozen-lockfile --lockfile-only)
           git diff --check
+          rm template/src/python/packages/example_core/pyproject.toml
       - name: Commit lock changes to current feature branch
         run: |
           set -euo pipefail
