@@ -113,9 +113,13 @@ def verified_acceptance(body: str) -> bool:
     for line in body.splitlines():
         marker = re.match(r"^[ \t]*(`{3,}|~{3,})(.*)$", line)
         if fence is not None:
-            if marker and marker[1][0] == fence[0] and len(marker[1]) >= fence[1]:
-                if not marker[2].strip():
-                    fence = None
+            if (
+                marker
+                and marker[1][0] == fence[0]
+                and len(marker[1]) >= fence[1]
+                and not marker[2].strip()
+            ):
+                fence = None
             continue
         if marker and not in_comment:
             fence = marker[1][0], len(marker[1])

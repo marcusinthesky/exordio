@@ -6,22 +6,12 @@
       "project": []
     },
     "apps/example-app": {
-      "entry": [
-        "src/main.ts",
-        "src/main.test.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ]
+      "entry": ["src/main.ts", "src/main.test.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/core": {
-      "entry": [
-        "src/index.ts",
-        "src/index.test.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ],
+      "entry": ["src/index.ts", "src/index.test.ts"],
+      "project": ["src/**/*.ts"],
       "includeEntryExports": true
     }
   }
