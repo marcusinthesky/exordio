@@ -89,7 +89,7 @@ jobs:
         with:
           primary-key: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('devenv.lock', 'devenv.nix', 'template/devenv.lock', 'template/infra/nix/devenv.nix.copier', 'template/infra/nix/**') }}
           restore-prefixes-first-match: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # zizmor: ignore[cache-poisoning] PRs skip this step; cache is only published by trusted main/tag runs
         if: github.event_name != 'pull_request' # v4
         with:
           path: |
