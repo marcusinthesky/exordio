@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: workflow-lint
         name: GitHub Actions workflow syntax
-        entry: actionlint .github/workflows/*.yml
+        entry: bash -c 'actionlint .github/workflows/*.yml'
         language: system
         pass_filenames: false
         always_run: true

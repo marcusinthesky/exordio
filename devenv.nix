@@ -4,6 +4,7 @@
   packages = with pkgs; [
     git
     actionlint
+    shellcheck
     just
     prek
     uv
