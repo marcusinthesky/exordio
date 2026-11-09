@@ -1,0 +1,41 @@
+name: Temporary dependency lock refresh
+on:
+  push:
+    branches: [feat/quality-gates-polyglot-2026]
+permissions:
+  contents: write
+jobs:
+  refresh:
+    if: ${{ !contains(github.event.head_commit.message, 'chore(lock):') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.0
+      - name: Regenerate and verify all touched locks
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv lock --project .
+          uv lock --project template/src/python
+          (cd template/src/typescript && bun install --lockfile-only)
+          uv lock --project . --check
+          uv lock --project template/src/python --check
+          (cd template/src/typescript && bun install --frozen-lockfile --lockfile-only)
+          git diff --check
+      - name: Commit lock changes to current feature branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock template/src/python/uv.lock template/src/typescript/bun.lock
+          if git diff --cached --quiet; then
+            echo "No lock changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(lock): regenerate uv and Bun locks for quality tools"
+          git push origin HEAD:feat/quality-gates-polyglot-2026
