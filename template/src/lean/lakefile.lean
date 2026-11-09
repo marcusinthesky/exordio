@@ -2,6 +2,8 @@ import Lake
 open Lake DSL
 
 package proofs where
+  lintDriver := "batteries/runLinter"
+  lintDriverArgs := #["Example"]
   leanOptions := #[⟨`warningAsError, true⟩]
 
 require LeanArchitect from git

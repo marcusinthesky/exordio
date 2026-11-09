@@ -13,7 +13,7 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --strict-config --strict-markers"
 markers = ["integration: needs prepared workflow dependencies or stack tools"]
 
 [tool.ruff]

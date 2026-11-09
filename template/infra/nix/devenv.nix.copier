@@ -24,6 +24,12 @@
       lychee
       nixfmt
       statix
+      deadnix
+      actionlint
+      shellcheck
+      shfmt
+      tombi
+      just-lsp
       ripgrep
 [% if workflows or agents or 'python' in languages or 'lean' in languages %]
       python313

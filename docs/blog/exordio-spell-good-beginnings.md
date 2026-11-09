@@ -4,7 +4,7 @@ description: Why Exordio treats the repository as the durable harness for AI-ass
 
 # Exordio: A spell for good beginnings
 
-*Marcus Gawronsky · 3 November 2026*
+Marcus Gawronsky · 3 November 2026
 
 ![Exordio wordmark](../assets/exordio-wordmark.svg)
 

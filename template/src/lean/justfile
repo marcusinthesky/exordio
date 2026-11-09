@@ -34,7 +34,11 @@ blueprint-pdf: blueprint-web
     cd blueprint/src && tectonic --untrusted --only-cached --bundle "{{ bundle }}" --keep-logs --outdir ../print print.tex
     if rg -n 'Reference.+undefined|There were undefined|multiply-defined|Multiply defined' blueprint/print/print.log; then echo 'Unresolved blueprint references' >&2; exit 1; fi
 
+lint:
+    lake lint
+
 check: blueprint-pdf
+    just lint
     git diff --check -- .
 
 # Lean follows Mathlib style; no automatic formatter is installed.

@@ -12,6 +12,18 @@ repos:
       - id: check-case-conflict
   - repo: local
     hooks:
+      - id: workflow-lint
+        name: GitHub Actions workflow syntax
+        entry: actionlint .github/workflows/*.yml
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: shellcheck
+        name: ShellCheck scripts
+        entry: shellcheck
+        language: system
+        types: [shell]
+        files: \.sh$
       - id: markdown
         name: Markdown formatting and local links
         entry: rumdl check .

@@ -19,9 +19,10 @@ dev = [
 target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
 
 [tool.pyrefly]
+preset = "strict"
 project-includes = ["apps", "packages"]
 python-version = "3.13"
 
