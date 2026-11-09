@@ -17,7 +17,9 @@ jobs:
       TECTONIC_CACHE_DIR: /tmp/exordio-tectonic-cache
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false # v4
       - name: Free hosted runner disk space
         run: |
           df -h /
@@ -28,6 +30,7 @@ jobs:
         with:
           nix_version: 2.34.7
       - uses: nix-community/cache-nix-action@135667ec418502fa5a3598af6fb9eb733888ce6a
+        if: github.event_name != 'pull_request'
         with:
           primary-key: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('devenv.lock', 'devenv.nix', 'template/devenv.lock', 'template/infra/nix/devenv.nix.copier', 'template/infra/nix/**') }}
           restore-prefixes-first-match: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-
@@ -69,7 +72,9 @@ jobs:
           - {runner: ubuntu-24.04-arm, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","lean","latex"]'}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false # v4
       - name: Free hosted runner disk space
         run: |
           df -h /
@@ -80,10 +85,12 @@ jobs:
         with:
           nix_version: 2.34.7
       - uses: nix-community/cache-nix-action@135667ec418502fa5a3598af6fb9eb733888ce6a
+        if: github.event_name != 'pull_request'
         with:
           primary-key: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('devenv.lock', 'devenv.nix', 'template/devenv.lock', 'template/infra/nix/devenv.nix.copier', 'template/infra/nix/**') }}
           restore-prefixes-first-match: nix-single-user-v1-${{ runner.os }}-${{ runner.arch }}-
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        if: github.event_name != 'pull_request' # v4
         with:
           path: |
             ~/.cache/uv
