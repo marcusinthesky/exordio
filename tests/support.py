@@ -12,7 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ("planning", "reference")
-LANGUAGES = ("python", "typescript", "lean", "latex")
+LANGUAGES = ("python", "typescript", "rust", "lean", "latex")
 COPIER = [sys.executable, "-m", "copier"]
 WORKFLOW = "src/python/scripts/workflow/script.py"
 

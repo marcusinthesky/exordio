@@ -1,0 +1,57 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+default:
+    @just --list
+
+# Cargo can otherwise create a missing lock for a dependency-free package.
+[private]
+_locked:
+    @test -s Cargo.lock || { echo 'Cargo.lock is required; regenerate it explicitly with cargo generate-lockfile.' >&2; exit 1; }
+
+# Prepare dependency caches without changing the committed lock.
+setup: _locked
+    cargo fetch --locked
+
+run name="world": _locked
+    cargo run --frozen -- "$1"
+
+fmt-check:
+    cargo fmt --all -- --check
+
+fmt:
+    cargo fmt --all
+
+typecheck: _locked
+    cargo check --all-targets --all-features --frozen
+
+lint: _locked
+    cargo clippy --all-targets --all-features --frozen -- -D warnings
+
+dependencies: _locked
+    cargo metadata --format-version 1 --frozen > /dev/null
+
+deadcode: dependencies
+    cargo shear --frozen
+
+# Nextest runs unit and integration tests; rustdoc examples run separately.
+test: _locked
+    cargo nextest run --all-features --frozen --profile ci --retries 0
+    cargo test --doc --all-features --frozen
+
+doc: _locked
+    RUSTDOCFLAGS="${RUSTDOCFLAGS:-} -D warnings" cargo doc --all-features --no-deps --frozen
+
+build: _locked
+    cargo build --release --all-features --frozen
+
+# All ordinary checks use prepared inputs and write only ignored build output.
+check: fmt-check dependencies typecheck lint deadcode test doc build
+
+# Refresh advisory data and check dependency security, licenses and sources.
+security: _locked
+    cargo deny --locked --all-features check
+
+# Optional report; no arbitrary coverage threshold is imposed on new projects.
+coverage: _locked
+    cargo llvm-cov --all-features --frozen --html

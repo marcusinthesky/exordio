@@ -10,7 +10,7 @@ Tests copy the current source into temporary Git repositories. They exercise
 the real Copier CLI, so uncommitted template changes are tested without
 changing the working branch or relying on its current committed template.
 
-Twelve render fixtures cover the independent workflow choices, each language on
+Render fixtures cover the independent workflow choices, each language on
 its own, useful integrations and the maximal selection. Workflow tests create
 real records, exercise completion rules and detect stale views. Upgrade tests
 make two local tags and preserve authored content, saved answers and reviewable
@@ -48,3 +48,9 @@ CI prepares x64 TeX resources once using sequential manuscript, reference and
 blueprint fixtures, then passes the resulting Tectonic cache to project jobs.
 Explicit TeX setup retries diagnosed transient bundle-server failures; offline
 checks continue to fail if a required resource is absent.
+
+Rust-only and maximal runtime fixtures exercise the pinned Rust toolchain on
+x86-64 and ARM64. They run Nextest and doctests separately, build and execute the
+CLI, and inject compiler, Clippy, formatting, test, documentation and dependency
+defects. Every rejection checks that source manifests, lockfiles and code remain
+unchanged. Ordinary render/update tests do not require the Rust toolchain.
