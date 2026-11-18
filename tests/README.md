@@ -10,7 +10,7 @@ Tests copy the current source into temporary Git repositories. They exercise
 the real Copier CLI, so uncommitted template changes are tested without
 changing the working branch or relying on its current committed template.
 
-Twelve render fixtures cover the independent workflow choices, each language on
+Render fixtures cover the independent workflow choices, each language on
 its own, useful integrations and the maximal selection. Workflow tests create
 real records, exercise completion rules and detect stale views. Upgrade tests
 make two local tags and preserve authored content, saved answers and reviewable
@@ -18,7 +18,8 @@ configuration conflicts.
 
 Native Insitu integration uses the locked tool environment prepared by setup.
 Toolchain builds are exercised separately by the runtime CI matrix; ordinary
-render tests do not download every language dependency.
+render tests do not download every language dependency. Go-only fixtures run on
+both x86-64 and ARM64, with Go also included in both maximal fixtures.
 
 Run a generated project in its own pinned devenv environment with:
 
@@ -33,6 +34,18 @@ blocked HTTP proxies. The maximal fixture also enables both agents and
 SecretSpec. An agent-only fixture checks native AgentSync without a language
 workspace or Bun installation. Native dependencies are required for every test run; complete
 `just setup` before testing.
+
+Go runtime fixtures use a custom module path and run the CLI through Just.
+Deliberate type, unchecked-error, formatting, test and module-file defects must
+produce the expected diagnostic. Each failing check must preserve its input;
+checks also reject newly created, nonignored files such as an unexpected
+`go.sum`. The clean gate runs again after the probes are restored. Tagged
+upgrade tests add Go to an existing project and preserve its saved module path
+and authored Go files through later updates.
+
+A tiny local Go module proxy and isolated cache verify that setup rejects
+missing checksums without repairing source. The same fixture confirms that
+relative local replacements still resolve when setup uses a temporary modfile.
 
 The render fixtures lint generated documentation and check entry-point budgets.
 Documentation tests execute the printed planning walkthrough and verify native

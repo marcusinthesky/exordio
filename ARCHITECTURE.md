@@ -10,7 +10,7 @@ the catalog. Separate independently versioned add-ons are unnecessary here.
 
 ## Select capabilities, not profiles
 
-Two independent workflow choices supply planning and references. Four independent
+Two independent workflow choices supply planning and references. Five independent
 languages supply runnable examples. All default to empty. AgentSync and
 SecretSpec remain optional integrations; Nix is the shared environment foundation.
 There are no workflow bundles, cloud scaffolds or implicit research applications.
@@ -41,7 +41,9 @@ small contracts: work item, reference and the 1,500-token entry budget.
 
 ## Keep execution explicit
 
-Devenv pins tools on Linux x86-64 and ARM64. Language workspaces and PEP 723 repository scripts have separate frozen locks. Setup can download inputs and create ignored
+Devenv pins tools on Linux x86-64 and ARM64. Language workspaces and PEP 723
+repository scripts own their dependency manifests and locks. Go uses its native
+module manifest and checksums. Setup can download inputs and create ignored
 environments; checks use prepared inputs and never repair tracked files.
 
 Nix builds AgentSync directly from its pinned Rust source and Cargo lock.
@@ -58,8 +60,13 @@ files, unexpected links and symlinked parents stop setup without replacement.
 Without AgentSync, projects can author their own instructions outside template ownership.
 SecretSpec resolves credentials only for an explicit subprocess.
 
-Python and TypeScript retain separate library/application packages. Lean and
-Mathlib move together; LeanArchitect extracts blueprint content from compiled
+Python and TypeScript retain separate library/application packages. Go uses one
+module under `src/go`, with a reusable package and a thin command under `cmd/`.
+Its module identity is an explicit Copier answer; Nix supplies the Go tools and
+C compiler for race detection. Go checks run offline after setup, while
+`go::security` explicitly consults the current vulnerability database.
+
+Lean and Mathlib move together; LeanArchitect extracts blueprint content from compiled
 annotations. LeanBlueprint renders that content through plasTeX. Its nested Lake
 workspace uses direct rendering commands rather than a custom upstream adapter.
 Lean provides its own blueprint dependencies independently of manuscript LaTeX.

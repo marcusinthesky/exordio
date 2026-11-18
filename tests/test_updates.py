@@ -110,3 +110,42 @@ def test_conflicting_configuration_changes_remain_reviewable(tmp_path: Path) -> 
         text in config.read_text()
         for text in ("project-choice", "template-choice", "<<<<<<<", ">>>>>>>")
     )
+
+
+def test_adding_go_and_later_updates_preserve_module_identity_and_authored_code(
+    tmp_path: Path,
+) -> None:
+    source = snapshot_template(tmp_path / "catalog")
+    repo = tmp_path / "project"
+    render(source, repo, ref="v0.1.0")
+    git(repo, "init", "--quiet", "--initial-branch=main")
+    notes = repo / "notes.md"
+    notes.write_text("# Notes\n\nKeep these project decisions.\n")
+    commit_all(repo, "docs(project): record authored decisions")
+    assert "go_module" not in answers(repo)
+
+    release(source)
+    module = "github.com/acme/project/src/go"
+    selection = tmp_path / "go-selection.yml"
+    selection.write_text(yaml.safe_dump({"languages": ["go"], "go_module": module}))
+    update(repo, "--data-file", str(selection))
+    assert answers(repo)["languages"] == ["go"]
+    assert answers(repo)["go_module"] == module
+    assert not (repo / "src/python").exists()
+    assert notes.read_text() == "# Notes\n\nKeep these project decisions.\n"
+
+    authored = repo / "src/go/greet/authored.go"
+    authored.write_text('package greet\n\nconst AuthoredMessage = "keep me"\n')
+    commit_all(repo, "feat(project): implement custom Go behavior")
+    preserved = {path: path.read_bytes() for path in (notes, authored, repo / "src/go/go.mod")}
+    guide = source / "template/src/go/README.md.copier"
+    guide.write_text(guide.read_text() + "\nUpdated Go guidance.\n")
+    commit_all(source, "docs(template): refine Go guidance")
+    git(source, "tag", "v0.3.0")
+    update(repo)
+
+    assert answers(repo)["_commit"] == "v0.3.0"
+    assert answers(repo)["go_module"] == module
+    assert {path: path.read_bytes() for path in preserved} == preserved
+    assert "Updated Go guidance." in (repo / "src/go/README.md").read_text()
+    assert f'"{module}/greet"' in (repo / "src/go/cmd/example-app/main.go").read_text()

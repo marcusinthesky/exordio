@@ -48,6 +48,14 @@
 [% if 'typescript' in languages %]
       bun
 [% endif %]
+[% if 'go' in languages %]
+      go
+      golangci-lint
+      govulncheck
+[% endif %]
+[% if 'go' in languages or 'lean' in languages %]
+      stdenv.cc
+[% endif %]
 [% if agents %]
       (callPackage ./pkgs/agentsync.nix { })
 [% endif %]
@@ -61,7 +69,6 @@
       zstd
       graphviz
       swig
-      stdenv.cc
 [% endif %]
 [% if 'latex' in languages or 'lean' in languages %]
       tectonic
@@ -88,6 +95,9 @@
     ];
   env = {
     UV_PYTHON_DOWNLOADS = "never";
+[% if 'go' in languages %]
+    GOTOOLCHAIN = "local";
+[% endif %]
 [% if workflows or agents or 'python' in languages or 'lean' in languages %]
     UV_PYTHON = "${pkgs.python313}/bin/python3";
 [% endif %]

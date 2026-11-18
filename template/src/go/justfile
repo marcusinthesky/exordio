@@ -1,0 +1,57 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+# Keep this module independent of an ambient workspace or downloaded toolchain.
+go_env := "env GOTOOLCHAIN=local GOWORK=off"
+# Setup verifies checksums online; checks consume only prepared local inputs.
+offline := go_env + " GOPROXY=off GONOPROXY=none GOSUMDB=off GOFLAGS=-mod=readonly"
+
+default:
+    @just --list
+
+# Explicit network step: populate caches without repairing source manifests.
+setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    temporary=$(mktemp -d)
+    trap 'rm -rf "$temporary"' EXIT
+    cp go.mod "$temporary/go.mod"
+    if [[ -f go.sum ]]; then cp go.sum "$temporary/go.sum"; fi
+    {{ go_env }} go mod download -modfile "$temporary/go.mod"
+    just modules
+
+run name="world": modules
+    {{ offline }} go run ./cmd/example-app "$1"
+
+# Validate manifests before any command that loads the module graph.
+modules:
+    {{ offline }} go mod tidy -diff
+    {{ offline }} go mod verify > /dev/null
+
+# golangci-lint checks the enabled formatters without rewriting files.
+lint: modules
+    {{ offline }} golangci-lint run ./...
+
+# The Go compiler provides type checking; tests additionally compile test code.
+typecheck: modules
+    {{ offline }} go build ./...
+
+test: modules
+    {{ offline }} go test -count=1 ./...
+
+race: modules
+    {{ offline }} CGO_ENABLED=1 go test -race -count=1 ./...
+
+# Compile all packages and write command binaries to ignored build/.
+build: modules
+    mkdir -p build
+    {{ offline }} go build -trimpath -o build/ ./...
+
+check: modules lint test race build
+
+fmt:
+    {{ offline }} golangci-lint fmt ./...
+
+# Explicit online check against the current Go vulnerability database.
+security: modules
+    {{ go_env }} GOFLAGS=-mod=readonly govulncheck ./...

@@ -66,10 +66,12 @@ jobs:
           - {runner: ubuntu-24.04, kind: project, workflows: '["reference"]', languages: '["latex"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["python"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["typescript"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["go"]'}
+          - {runner: ubuntu-24.04-arm, kind: project, workflows: '[]', languages: '["go"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["lean"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["latex"]'}
-          - {runner: ubuntu-24.04, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","lean","latex"]'}
-          - {runner: ubuntu-24.04-arm, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","lean","latex"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","go","lean","latex"]'}
+          - {runner: ubuntu-24.04-arm, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","go","lean","latex"]'}
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -96,7 +98,10 @@ jobs:
             ~/.cache/uv
             ~/.cache/mathlib
             ~/.bun/install/cache
-          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ matrix.kind }}-${{ hashFiles('**/uv.lock', '**/*.py.lock', '**/bun.lock', '**/lake-manifest.json') }}
+            ~/.cache/go-build
+            ~/.cache/golangci-lint
+            ~/go/pkg/mod
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ matrix.kind }}-${{ hashFiles('**/uv.lock', '**/*.py.lock', '**/bun.lock', '**/lake-manifest.json', '**/go.mod*', '**/go.sum') }}
       - name: Restore prepared TeX resources
         if: matrix.kind == 'project' && matrix.runner == 'ubuntu-24.04'
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
