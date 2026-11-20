@@ -209,7 +209,7 @@ def initialize_blank(container) -> None:
 
 
 def prepared_image(
-    runner, base: str, seed: Path, language: str, destination: Path, upstream: Path
+    runner, base: str, seed: Path, language: str, destination: Path, upstream: Path, case_id: str
 ) -> str:
     """Build the treatment in /app and check it offline before accepting the image."""
     tag = "exordio-base:" + base.removeprefix("sha256:")
@@ -230,6 +230,13 @@ def prepared_image(
         check=True,
     )
     image = image_id.read_text().strip()
+    validate_prepared_image(runner, image, language, upstream, case_id)
+    return image
+
+
+def validate_prepared_image(
+    runner, image: str, language: str, upstream: Path, case_id: str
+) -> None:
     container = runner.Container.start(image, network="none")
     try:
         checked_exec(container, "tar -C /app -xf /opt/exordio-starter.tar")
@@ -239,6 +246,13 @@ def prepared_image(
             f'cd /app && PATH="$(cat /etc/exordio-profile)/bin:$PATH" just {language}::test',
         )
         if language == "python":
+            # Create a harmless protected file even in images stripped of every banned package.
+            module = runner.load_denylist(upstream / "benchmark/cases" / case_id).import_ban[0]
+            location = container.exec("python3 -c 'import site; print(site.getsitepackages()[0])'")
+            if location.exit_code:
+                raise RuntimeError("cannot locate the native Python package directory")
+            target = f"{location.tail.strip()}/bench_audit_fixture/_vendor/{module}/probe.txt"
+            container.write_file(target, b"audit fixture")
             monitor = runner.AccessMonitor(container.container_id)
             monitor.start()
             try:
@@ -247,15 +261,15 @@ def prepared_image(
                 if monitor.violated.is_set():
                     raise ValueError("ordinary Python import triggered the case audit")
                 protected = monitor.reconciler.protected
-                if not protected:
-                    raise ValueError("case has no target for the Python access audit")
-                probe = f"open({protected[0]!r}, 'rb').close()"
+                if target not in protected:
+                    raise ValueError("native monitor did not register the audit fixture")
+                probe = f"open({target!r}, 'rb').close()"
                 checked_exec(container, f"{python} -I -S -c {shlex.quote(probe)}")
                 monitor.violated.wait(10)
             finally:
                 events = monitor.stop()
             if monitor.infra_error or not any(
-                event.get("opener") == "python" and protected[0] in event.get("paths", [])
+                event.get("opener") == "python" and target in event.get("paths", [])
                 for event in events
             ):
                 raise ValueError("native monitor could not attribute the controlled Python access")
@@ -267,26 +281,31 @@ def prepared_image(
                 "_cb_import_block_hooks.mjs",
             ):
                 container.cp_to(hooks / name, "/tmp/")
+            denylist = runner.load_denylist(upstream / "benchmark/cases" / case_id)
+            package = denylist.import_ban[0]
+            container.write_file(f"/app/node_modules/{package}/index.js", b"module.exports = 123;")
             for extension, statement in (
-                ("mjs", "await import('path')"),
-                ("cjs", "require('path')"),
+                ("mjs", f"await import({json.dumps(package)})"),
+                ("cjs", f"require({json.dumps(package)})"),
             ):
-                source = (
+                container.write_file(
+                    f"/app/audit-probe.{extension}",
                     f"try {{ {statement}; }} catch (e) {{ "
-                    "if (e.code === 'CODING_BENCH_IMPORT_BAN') process.exit(0); throw e; } "
-                    "throw Error('prepared Bun lacks Zero2Repo import protection');"
+                    "if (process.env.CODING_BENCH_IMPORT_BAN && "
+                    "e.code === 'CODING_BENCH_IMPORT_BAN') process.exit(0); throw e; } "
+                    "if (process.env.CODING_BENCH_IMPORT_BAN) "
+                    "throw Error('prepared Bun lacks Zero2Repo import protection');".encode(),
                 )
-                container.write_file(f"/app/audit-probe.{extension}", source.encode())
-                checked_exec(
-                    container,
-                    "cd /app && CODING_BENCH_IMPORT_BAN=path "
-                    'NODE_OPTIONS="--require /tmp/_cb_import_block.cjs '
-                    '--import /tmp/_cb_import_block_esm.mjs" '
-                    f'"$(cat /etc/exordio-profile)/bin/bun" audit-probe.{extension}',
-                )
+                for banned in ("", package):
+                    checked_exec(
+                        container,
+                        f"cd /app && CODING_BENCH_IMPORT_BAN={shlex.quote(banned)} "
+                        'NODE_OPTIONS="--require /tmp/_cb_import_block.cjs '
+                        '--import /tmp/_cb_import_block_esm.mjs" '
+                        f'"$(cat /etc/exordio-profile)/bin/bun" audit-probe.{extension}',
+                    )
     finally:
         container.remove()
-    return image
 
 
 def prepare(config_path: Path, destination: Path) -> None:
@@ -343,6 +362,7 @@ def prepare(config_path: Path, destination: Path) -> None:
                 language,
                 destination,
                 Path(config["zero2repo"]),
+                case_id,
             )
             images[case_id]["prepared_image_seconds"] = time.monotonic() - setup_start
         campaign = {
@@ -584,6 +604,8 @@ def execute_trial(
                 checked_exec(container, "tar -C /app -xf /opt/exordio-starter.tar")
             elif outcome is None or outcome.exit_code == 0:
                 initialize_blank(container)
+            if outcome is None or outcome.exit_code == 0:
+                checked_exec(container, "install -d -m 0700 /run/pydantic-ai")
             return outcome
         finally:
             preparation_seconds = time.monotonic() - start
