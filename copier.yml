@@ -1,6 +1,8 @@
 _min_copier_version: "9.16.0"
 _subdirectory: template
 _templates_suffix: .copier
+_external_data:
+  previous_answers: "[[ _copier_conf.answers_file ]]"
 _envops:
   variable_start_string: "[["
   variable_end_string: "]]"
@@ -43,7 +45,7 @@ languages:
   multiselect: true
   choices:
     "Python: a typed library and application": python
-    "TypeScript: a Bun library and CLI": typescript
+    "TypeScript: a Bun workspace, optionally with full-stack components": typescript
     "Go: a native module with a library and CLI": go
     "Rust: a native library and CLI with strict quality checks": rust
     "Lean4: Mathlib, LeanArchitect and LeanBlueprint": lean
@@ -58,6 +60,21 @@ go_module:
   validator: >-
     [% if 'go' in languages and not (go_module | regex_search('^[a-z0-9]+(?:[.-][a-z0-9]+)*[.][a-z0-9]+(?:/[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?)+\Z')) %]
     Use a module import path such as example.com/my-project or github.com/owner/repo/src/go, without a URL scheme, spaces or traversal.
+    [% endif %]
+
+typescript_components:
+  type: bool
+  when: "[[ 'typescript' in languages ]]"
+  help: Initialise with components? Includes Next.js, UI, database, authentication and tests.
+  default: false
+  validator: >-
+    [% if typescript_components and 'typescript' not in languages %]
+    Select TypeScript before initialising with components.
+    [% elif _copier_conf.overwrite and not _copier_conf.data.get('_commit') %]
+    [% set previous = _external_data.previous_answers %]
+    [% if 'typescript' in previous.get('languages', []) and typescript_components != previous.get('typescript_components', false) %]
+    Switching TypeScript variants requires a manual migration. Generate the desired variant in a new directory and preserve your application code; see docs/updates.md.
+    [% endif %]
     [% endif %]
 
 agents:
@@ -88,8 +105,14 @@ _exclude:
   - '**/build/**'
   - '**/dist/**'
   - '**/target/**'
-  - '**/web/**'
-  - '**/print/**'
+  - 'src/lean/blueprint/web/**'
+  - 'src/lean/blueprint/print/**'
+  - '**/.next/**'
+  - '**/storybook-static/**'
+  - '**/playwright-report/**'
+  - '**/test-results/**'
+  - '**/coverage/**'
+  - '**/next-env.d.ts'
   - '**/.pytest_cache/**'
   - '**/.ruff_cache/**'
   - "[% if not workflows %].context[% endif %]"
@@ -109,8 +132,17 @@ _exclude:
   - "[% if 'python' not in languages %]src/python/justfile[% endif %]"
   - "[% if 'python' not in languages %]src/python/ARCHITECTURE.md[% endif %]"
   - "[% if 'typescript' not in languages %]src/typescript[% endif %]"
-  - "[% if 'go' not in languages %]src/go[% endif %]"
   - "[% if 'rust' not in languages %]src/rust[% endif %]"
+  - "[% if 'go' not in languages %]src/go[% endif %]"
+  - "[% if not typescript_components %]src/typescript/apps/web[% endif %]"
+  - "[% if not typescript_components %]src/typescript/packages/ui[% endif %]"
+  - "[% if not typescript_components %]src/typescript/scripts[% endif %]"
+  - "[% if not typescript_components %]src/typescript/tests[% endif %]"
+  - "[% if not typescript_components %]src/typescript/vitest.config.ts[% endif %]"
+  - "[% if not typescript_components %]src/typescript/playwright.config.ts[% endif %]"
+  - "[% if not typescript_components %]src/typescript/playwright.visual.config.ts[% endif %]"
+  - "[% if typescript_components %]src/typescript/apps/example-app[% endif %]"
+  - "[% if typescript_components %]src/typescript/packages/core[% endif %]"
   - "[% if 'lean' not in languages %]src/lean[% endif %]"
   - "[% if 'lean' not in languages %]infra/nix/pkgs/lean-toolchain.nix[% endif %]"
   - "[% if 'latex' not in languages %]src/latex[% endif %]"

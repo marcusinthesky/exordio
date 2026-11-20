@@ -1,8 +1,15 @@
-[% if 'lean' in languages and workflows %]
+[% if ('lean' in languages and workflows) or typescript_components %]
 {
   pkgs,
+[% if 'lean' in languages %]
   inputs,
+[% endif %]
+[% if workflows or typescript_components %]
   lib,
+[% endif %]
+[% if typescript_components %]
+  config,
+[% endif %]
   ...
 }:
 [% else %]
@@ -47,6 +54,10 @@
 [% endif %]
 [% if 'typescript' in languages %]
       bun
+[% if typescript_components %]
+      nodejs_24
+      chromium
+[% endif %]
 [% endif %]
 [% if 'go' in languages %]
       go
@@ -104,6 +115,15 @@
 [% endif %]
     ];
   env = {
+[% if typescript_components %]
+    DATABASE_URL = "postgresql://exordio@127.0.0.1:${toString config.processes.postgres.ports.main.value}/exordio";
+    SMTP_HOST = "127.0.0.1";
+    SMTP_PORT = toString config.processes.mailpit.ports.smtp.value;
+    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+    LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ];
+    NEXT_TELEMETRY_DISABLED = "1";
+    STORYBOOK_DISABLE_TELEMETRY = "1";
+[% endif %]
     UV_PYTHON_DOWNLOADS = "never";
 [% if 'go' in languages %]
     GOTOOLCHAIN = "local";
@@ -133,6 +153,26 @@
     ];
 [% endif %]
   };
+[% if typescript_components %]
+  # Development services bind only to loopback; production uses explicit configuration.
+  services.postgres = {
+    enable = true;
+    package = pkgs.postgresql_17;
+    listen_addresses = "127.0.0.1";
+    port = 55432;
+    initialDatabases = [
+      {
+        name = "exordio";
+        user = "exordio";
+      }
+    ];
+  };
+  services.mailpit = {
+    enable = true;
+    uiListenAddress = "127.0.0.1:8025";
+    smtpListenAddress = "127.0.0.1:1025";
+  };
+[% endif %]
   enterShell = "unset PYTHONPATH PYTHONHOME VIRTUAL_ENV";
   enterTest = "just check";
 }

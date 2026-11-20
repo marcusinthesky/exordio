@@ -67,3 +67,29 @@ x86-64 and ARM64. They run Nextest and doctests separately, build and execute th
 CLI, and inject compiler, Clippy, formatting, test, documentation and dependency
 defects. Every rejection checks that source manifests, lockfiles and code remain
 unchanged. Ordinary render/update tests do not require the Rust toolchain.
+
+## Full-stack TypeScript
+
+`tests/test_typescript_components.py` renders both TypeScript variants through
+Copier, validates hidden/invalid answers, checks source tracking and verifies
+real tagged upgrades. Same-variant updates retain custom code and theme changes.
+Switching existing variants must fail before modifying any project file.
+Rendered fixtures run the production whitespace gate as well as workflow,
+Nix and Markdown validation before dependencies are installed.
+
+The separate `typescript-components` CI job has no TeX dependency. It renders one
+complete application on Linux x86-64 and ARM64, prepares frozen dependencies,
+starts local PostgreSQL/Mailpit, applies committed migrations, then runs the
+entire project gate with external HTTP blocked and loopback available. It also
+injects type, unused-export and UI-boundary defects, and verifies setup rejects
+a missing lock without recreating it. Services are stopped on success or failure.
+
+```bash
+devenv shell -- uv run --frozen python -m tests.check_typescript_components
+```
+
+The same gate builds the production application and Storybook, exercises browser
+interactions, authentication and database isolation, and checks visual scenarios.
+Pixel baselines are specific to Linux x86-64; the other supported architecture
+still runs behavioral, responsive and accessibility checks. Screenshot updates
+are explicit and reviewed, never part of ordinary checking.

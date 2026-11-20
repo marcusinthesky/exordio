@@ -6,7 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from tests.support import ROOT, run
+from tests.support import ROOT, render, run
 
 
 def test_python_discovers_added_members_with_repeated_test_names(tmp_path: Path) -> None:
@@ -35,9 +35,12 @@ def test_python_discovers_added_members_with_repeated_test_names(tmp_path: Path)
     assert "new_library" in result.stdout
 
 
-def test_typescript_application_runs_from_spaces_and_unicode(tmp_path: Path) -> None:
-    workspace = tmp_path / "project's café workspace" / "typescript"
-    shutil.copytree(ROOT / "template/src/typescript", workspace)
+def test_typescript_application_runs_from_spaces_and_unicode(
+    template_source: Path, tmp_path: Path
+) -> None:
+    repo = tmp_path / "project's café workspace"
+    render(template_source, repo, {"languages": ["typescript"]})
+    workspace = repo / "src/typescript"
     package_links = workspace / "node_modules/@example"
     package_links.mkdir(parents=True)
     (package_links / "core").symlink_to(workspace / "packages/core", target_is_directory=True)

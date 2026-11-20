@@ -81,6 +81,7 @@ def test_supported_compositions(
             tomllib.loads(path.read_text())
     run(["nixfmt", "--check", "devenv.nix", *map(str, (repo / "infra/nix").rglob("*.nix"))], repo)
     run(["statix", "check", "infra/nix"], repo)
+    run(["actionlint", *map(str, (repo / ".github/workflows").glob("*.yml"))], repo)
     run(["rumdl", "check", "."], repo)
     run(["just", "--list"], repo)
     entries = ["README.md"]
