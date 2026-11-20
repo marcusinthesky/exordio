@@ -91,22 +91,29 @@ function Display() {
           </p>
         </TabsContent>
       </Tabs>
-      <Accordion>
-        <AccordionItem value="theming">
-          <AccordionTrigger>Where do I change the theme?</AccordionTrigger>
-          <AccordionContent>
-            Edit the shared CSS tokens to restyle every component and layout
-            together.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="components">
-          <AccordionTrigger>Can I customize these components?</AccordionTrigger>
-          <AccordionContent>
-            The source lives in this repository, alongside its stories and
-            tests.
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      <section aria-labelledby="questions-heading" className="space-y-4">
+        <h2 id="questions-heading" className="text-lg font-semibold">
+          Common questions
+        </h2>
+        <Accordion>
+          <AccordionItem value="theming">
+            <AccordionTrigger>Where do I change the theme?</AccordionTrigger>
+            <AccordionContent>
+              Edit the shared CSS tokens to restyle every component and layout
+              together.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="components">
+            <AccordionTrigger>
+              Can I customize these components?
+            </AccordionTrigger>
+            <AccordionContent>
+              The source lives in this repository, alongside its stories and
+              tests.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </section>
       <section aria-labelledby="loading-heading">
         <h2 id="loading-heading" className="mb-4 text-sm font-medium">
           Loading state

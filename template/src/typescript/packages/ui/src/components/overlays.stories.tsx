@@ -14,6 +14,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -81,11 +82,13 @@ function Overlays() {
             Project menu
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel>Project actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit project</DropdownMenuItem>
-            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">Archive</DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Project actions</DropdownMenuLabel>
+              <DropdownMenuItem>Edit project</DropdownMenuItem>
+              <DropdownMenuItem>Duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive">Archive</DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         <Popover>

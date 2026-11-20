@@ -14,7 +14,8 @@
     "Use style text children instead of raw HTML injection for chart CSS; stable chart series keys.",
     "Replace registry-only class markers with portable Tailwind utilities.",
     "Explicit label forwarding, semantic current breadcrumbs and field wrappers, and stable unique validation error keys.",
-    "Match slider thumb count to scalar or array values, including the default value."
+    "Match slider thumb count to scalar or array values, including the default value.",
+    "Use the semantic muted-foreground token for inactive tabs instead of transparent foreground text to preserve accessible contrast."
   ],
   "components": [
     {

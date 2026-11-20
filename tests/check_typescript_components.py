@@ -68,6 +68,7 @@ def exercise(directory: Path) -> None:
     source = snapshot_template(directory / "catalog")
     repo = directory / "project"
     render(source, repo, {"languages": ["typescript"], "typescript_components": True})
+    workspace = repo / "src/typescript"
     git(repo, "init", "--quiet", "--initial-branch=main")
     commit_all(repo, "feat(project): initialize complete TypeScript fixture")
     try:
@@ -79,11 +80,23 @@ def exercise(directory: Path) -> None:
         runtime(repo, "services-up")
         runtime(repo, "typescript::db-migrate")
         before = git(repo, "diff", "--binary", "HEAD")
-        runtime(repo, "check", offline=True)
+        try:
+            runtime(repo, "check", offline=True)
+        except subprocess.CalledProcessError:
+            # Keep the original gate failure while gathering reviewable visual evidence.
+            # The visual command uses updateSnapshots: "none" and writes only reports.
+            if (workspace / "packages/ui/storybook-static/index.html").is_file() and not (
+                workspace / "test-results/visual"
+            ).exists():
+                print("Collecting visual diagnostics after the failed check.", flush=True)
+                try:
+                    runtime(repo, "typescript::test-visual", offline=True, check=False)
+                except (subprocess.TimeoutExpired, OSError) as error:
+                    print(f"Visual diagnostics could not finish: {error}", flush=True)
+            raise
         assert git(repo, "diff", "--binary", "HEAD") == before, "Checks rewrote tracked content"
         assert not git(repo, "status", "--porcelain"), "Checks left unignored generated files"
 
-        workspace = repo / "src/typescript"
         schema = workspace / "apps/web/src/features/projects/schema.ts"
         original = schema.read_bytes()
         for fault, command, diagnostic in (
