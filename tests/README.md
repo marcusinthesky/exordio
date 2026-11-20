@@ -55,6 +55,8 @@ checks continue to fail if a required resource is absent.
 Copier, validates hidden/invalid answers, checks source tracking and verifies
 real tagged upgrades. Same-variant updates retain custom code and theme changes.
 Switching existing variants must fail before modifying any project file.
+Rendered fixtures run the production whitespace gate as well as workflow,
+Nix and Markdown validation before dependencies are installed.
 
 The separate `typescript-components` CI job has no TeX dependency. It renders one
 complete application on Linux x86-64 and ARM64, prepares frozen dependencies,

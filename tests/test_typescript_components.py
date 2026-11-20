@@ -21,6 +21,21 @@ from tests.support import (
 )
 
 
+def check_rendered_text(repo: Path) -> None:
+    """Run the production whitespace gate before any runtime is installed."""
+    files: list[str] = []
+    for path in repo.rglob("*"):
+        if not path.is_file():
+            continue
+        try:
+            contents = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        if "\0" not in contents:
+            files.append(str(path.relative_to(repo)))
+    run(["bash", "infra/nix/check-text.sh", *files], repo)
+
+
 @pytest.mark.parametrize("components", [False, True])
 def test_typescript_has_two_complete_variants(
     template_source: Path, tmp_path: Path, components: bool
@@ -58,6 +73,7 @@ def test_typescript_has_two_complete_variants(
     for path in repo.rglob("*.json"):
         json.loads(path.read_text())
     assert not list(repo.rglob("*.copier"))
+    check_rendered_text(repo)
     run(["just", "--list"], repo)
     run(["nixfmt", "--check", "devenv.nix", "infra/nix/devenv.nix"], repo)
     run(["statix", "check", "infra/nix"], repo)
@@ -87,6 +103,7 @@ def test_components_coexist_with_other_languages_and_workflows(
     assert (repo / ".agents").is_dir()
     for language in LANGUAGES:
         assert (repo / "src" / language).is_dir()
+    check_rendered_text(repo)
     run(["just", "--list"], repo)
     run(["nixfmt", "--check", "devenv.nix", "infra/nix/devenv.nix"], repo)
     run(["statix", "check", "infra/nix"], repo)

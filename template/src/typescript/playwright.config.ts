@@ -22,7 +22,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "bun --cwd apps/web run start",
+    command: "bun run --cwd apps/web start",
     url: "http://localhost:3000",
     reuseExistingServer: false,
     timeout: 120_000,

@@ -36,7 +36,7 @@ services-up:
 
 # Stop this project's local services.
 services-down:
-    devenv down
+    devenv processes down
 
 # Start services, apply committed migrations, and run the Next.js application.
 dev: services-up

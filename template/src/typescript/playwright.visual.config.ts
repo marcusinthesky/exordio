@@ -29,6 +29,11 @@ export default defineConfig({
     locale: "en-US",
     timezoneId: "UTC",
     reducedMotion: "reduce",
+    trace: "retain-on-failure",
+    screenshot: {
+      mode: "only-on-failure",
+      fullPage: true,
+    },
     launchOptions: executablePath ? { executablePath } : {},
   },
   webServer: {
