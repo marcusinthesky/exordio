@@ -10,7 +10,7 @@ Tests copy the current source into temporary Git repositories. They exercise
 the real Copier CLI, so uncommitted template changes are tested without
 changing the working branch or relying on its current committed template.
 
-Twelve render fixtures cover the independent workflow choices, each language on
+Render fixtures cover the independent workflow choices, each language on
 its own, useful integrations and the maximal selection. Workflow tests create
 real records, exercise completion rules and detect stale views. Upgrade tests
 make two local tags and preserve authored content, saved answers and reviewable
@@ -48,3 +48,27 @@ CI prepares x64 TeX resources once using sequential manuscript, reference and
 blueprint fixtures, then passes the resulting Tectonic cache to project jobs.
 Explicit TeX setup retries diagnosed transient bundle-server failures; offline
 checks continue to fail if a required resource is absent.
+
+## Full-stack TypeScript
+
+`tests/test_typescript_components.py` renders both TypeScript variants through
+Copier, validates hidden/invalid answers, checks source tracking and verifies
+real tagged upgrades. Same-variant updates retain custom code and theme changes.
+Switching existing variants must fail before modifying any project file.
+
+The separate `typescript-components` CI job has no TeX dependency. It renders one
+complete application on Linux x86-64 and ARM64, prepares frozen dependencies,
+starts local PostgreSQL/Mailpit, applies committed migrations, then runs the
+entire project gate with external HTTP blocked and loopback available. It also
+injects type, unused-export and UI-boundary defects, and verifies setup rejects
+a missing lock without recreating it. Services are stopped on success or failure.
+
+```bash
+devenv shell -- uv run --frozen python -m tests.check_typescript_components
+```
+
+The same gate builds the production application and Storybook, exercises browser
+interactions, authentication and database isolation, and checks visual scenarios.
+Pixel baselines are specific to Linux x86-64; the other supported architecture
+still runs behavioral, responsive and accessibility checks. Screenshot updates
+are explicit and reviewed, never part of ordinary checking.

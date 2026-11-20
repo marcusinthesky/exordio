@@ -59,7 +59,11 @@ Synchronization derives `src/latex/refs.bib` from these records.
 just python::run Ada
 [% endif %]
 [% if 'typescript' in languages %]
+[% if typescript_components %]
+just dev
+[% else %]
 just typescript::run Ada
+[% endif %]
 [% endif %]
 [% if 'lean' in languages %]
 just lean::build
@@ -69,6 +73,17 @@ just lean::blueprint-web
 just latex::build
 [% endif %]
 ```
+[% endif %]
+[% if typescript_components %]
+
+`just dev` starts local PostgreSQL and Mailpit, applies committed migrations and
+opens the Next.js development server. Visit `http://localhost:3000`; local email
+is available at Mailpit's configured address (normally `http://127.0.0.1:8025`).
+Use `just typescript::storybook` to explore shared components and layouts.
+
+Before the full check, run `just services-up` and `just typescript::db-migrate`.
+Checks use prepared services and never update source or visual baselines.
+Stop services explicitly with `just services-down`.
 [% endif %]
 [% if not workflows and not languages %]
 
@@ -112,5 +127,9 @@ and check. Copier selects the latest stable tag from the source saved in
 Adding capabilities preserves saved selections. Removing them
 requires manual migration because Copier can remove previously owned paths.
 Actual records remain project-owned.
+[% if 'typescript' in languages %]
+The TypeScript variant is fixed across updates. Switching basic/components
+requires generating a new project and deliberately migrating authored code.
+[% endif %]
 
 This project started with [Exordio](https://github.com/marcusinthesky/exordio).

@@ -1,5 +1,5 @@
 [global]
-exclude = [".devenv/**", ".direnv/**", "**/.venv/**", "**/node_modules/**", "**/.lake/**", ".insitu/**", "**/build/**", "**/dist/**", "**/web/**", "**/print/**"]
+exclude = [".devenv/**", ".direnv/**", "**/.venv/**", "**/node_modules/**", "**/.lake/**", ".insitu/**", "**/build/**", "**/dist/**", "src/lean/blueprint/web/**", "src/lean/blueprint/print/**", "**/.next/**", "**/storybook-static/**", "**/playwright-report/**", "**/test-results/**", "**/coverage/**"]
 disable = ["MD013"]
 
 [MD025]

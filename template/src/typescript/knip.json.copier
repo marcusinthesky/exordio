@@ -1,0 +1,58 @@
+[% if typescript_components %]
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs", "tests/**/*.ts", "*.config.ts"],
+      "project": ["scripts/**/*.mjs", "tests/**/*.ts", "*.config.ts"]
+    },
+    "apps/web": {
+      "entry": [
+        "src/app/**/{page,layout,loading,error,not-found,route,global-error,template}.tsx",
+        "src/app/**/route.ts",
+        "src/**/*.test.ts",
+        "drizzle.config.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "*.{ts,mjs}"],
+      "next": true,
+      "drizzle": false
+    },
+    "packages/ui": {
+      "entry": [
+        "src/**/*.stories.tsx",
+        "src/components/*.tsx",
+        "src/layouts/*.tsx",
+        "src/patterns/*.tsx",
+        ".storybook/*.{ts,tsx}",
+        "vitest.config.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        ".storybook/*.{ts,tsx}",
+        "vitest.config.ts"
+      ],
+      "storybook": true,
+      "includeEntryExports": false
+    }
+  }
+}
+[% else %]
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [],
+      "project": []
+    },
+    "apps/example-app": {
+      "entry": ["src/main.ts", "src/main.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/core": {
+      "entry": ["src/index.ts", "src/index.test.ts"],
+      "project": ["src/**/*.ts"],
+      "includeEntryExports": true
+    }
+  }
+}
+[% endif %]

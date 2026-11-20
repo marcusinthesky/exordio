@@ -1,0 +1,166 @@
+{
+  "project": "https://github.com/shadcn-ui/ui",
+  "license": "MIT",
+  "style": "base-nova",
+  "retrieved": "2026-11-20",
+  "upstreamHead": "f50887ae68d0fdcbfbe86b57be08af94a4c88a68",
+  "adaptations": [
+    "Workspace imports and local cn helper",
+    "Resolve icon placeholders to Lucide",
+    "Map font-heading to the shared token",
+    "Sonner receives its theme from the consuming application",
+    "Formatting and strict typing fixes",
+    "Shared local Inter font and semantic theme tokens.",
+    "Use style text children instead of raw HTML injection for chart CSS; stable chart series keys.",
+    "Replace registry-only class markers with portable Tailwind utilities.",
+    "Explicit label forwarding, semantic current breadcrumbs and field wrappers, and stable unique validation error keys.",
+    "Match slider thumb count to scalar or array values, including the default value."
+  ],
+  "components": [
+    {
+      "component": "accordion",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/accordion.json",
+      "sha256": "01509cb2a91779ee74c2d4a1f75842c0a258bed1758be4f2567af9daabdc39ac"
+    },
+    {
+      "component": "alert",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/alert.json",
+      "sha256": "0799cfc29a481568f6e9b48e96518a446032350dec576bfe31b7f67b4b262028"
+    },
+    {
+      "component": "avatar",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/avatar.json",
+      "sha256": "bbcabf0121fb2ff93a8522f8f80b74631e732a31399b1b7991c0b8c3167e2172"
+    },
+    {
+      "component": "badge",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/badge.json",
+      "sha256": "ccc20021cdcbf0fb23c0d4d28f1da4adde8e51ba59f4b11dd2722ed97a5ee3a4"
+    },
+    {
+      "component": "breadcrumb",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/breadcrumb.json",
+      "sha256": "5e7a33d921824d659494dc90411393cdf795c0ad5c94631da5c2883924623350"
+    },
+    {
+      "component": "button",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/button.json",
+      "sha256": "9ba7e870178813f0552b818a913a2792fb500c779e36395740b4973e3025d427"
+    },
+    {
+      "component": "card",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/card.json",
+      "sha256": "e73e3fe00ab2e14c4db1dccb1ff5c67041a94c0926ac3216c1dc6dd6dee9d7e0"
+    },
+    {
+      "component": "chart",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/chart.json",
+      "sha256": "c867c2180d6250e8f2883491abd802e1caae65eca6b11af415d42048cec798c5"
+    },
+    {
+      "component": "checkbox",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/checkbox.json",
+      "sha256": "e6df7b595f25a7ee97c3fb94e0ddc35998f74c98b990d3030e485905ec677178"
+    },
+    {
+      "component": "dialog",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/dialog.json",
+      "sha256": "40fc321d25eb9590d07db54b00d9bc1a74274a549aa06d5915a34ba302ed8b94"
+    },
+    {
+      "component": "dropdown-menu",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/dropdown-menu.json",
+      "sha256": "335c59dba30145f434a9cc9ccb0438a3c5e2afe857fc11b029de1ecb415224d7"
+    },
+    {
+      "component": "field",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/field.json",
+      "sha256": "586110f5563cbb5dc0929207ee34361f1349cf2f816465799c60b98821e4cedc"
+    },
+    {
+      "component": "input",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/input.json",
+      "sha256": "bbad1bba130ac9750a61844eeb8f043e8a710846e07689fa85398b80a46c2741"
+    },
+    {
+      "component": "label",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/label.json",
+      "sha256": "89b01e14fd39dceece9fa421e71e78ea83286bd43a2ca1c2f55d2e8d3958fff2"
+    },
+    {
+      "component": "popover",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/popover.json",
+      "sha256": "ba5fe84f353f6c0fd2133a2ab893f5e8861fc60dc4dea548a7ec875acaa37b2c"
+    },
+    {
+      "component": "progress",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/progress.json",
+      "sha256": "359e72beff723311ec2e4d5154a0f80dedd253bd6b16959a4db0773714ceab52"
+    },
+    {
+      "component": "radio-group",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/radio-group.json",
+      "sha256": "874b30662ba338d06362491b663cae9198281a4bc385b6be6425f2de442384d7"
+    },
+    {
+      "component": "scroll-area",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/scroll-area.json",
+      "sha256": "be6cdcfbf02a2fa091ec92cb2bc34e35b8a4e4b3a2d041973cfcd68396e6da1d"
+    },
+    {
+      "component": "select",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/select.json",
+      "sha256": "425e9b0a28b72617f18fabd75384050113295b88e7ba01c35bede2c72bd5d476"
+    },
+    {
+      "component": "separator",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/separator.json",
+      "sha256": "3ad65962485f464592201cb90017b3d52a5c9fe272ce41ee049485b4c42e0d76"
+    },
+    {
+      "component": "sheet",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/sheet.json",
+      "sha256": "72b36d92af7fcbc9bd2d1d4ef0cbc65f4fc8178f7bb2bedaf657460f15011cf4"
+    },
+    {
+      "component": "skeleton",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/skeleton.json",
+      "sha256": "85692a09912f518ffd64c540dfcf098fe748a807baf288c107cf8126496cf886"
+    },
+    {
+      "component": "slider",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/slider.json",
+      "sha256": "646bcd7913417b786bbf7578484f851bf89c81a62f70ef9c4f3522e2af80a951"
+    },
+    {
+      "component": "sonner",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/sonner.json",
+      "sha256": "831967f80f645ac3908b356a44748698a9ceed1c6a51b232dd5e87c52a54d7c3"
+    },
+    {
+      "component": "switch",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/switch.json",
+      "sha256": "1f22350ccbf358a3aa198305c41d91e146abc0a7d5b18a9a23488b8d6b264ab4"
+    },
+    {
+      "component": "table",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/table.json",
+      "sha256": "054c89df40058a96723c9ed8cde6308e738f3a303fd19301ce94ade032306b60"
+    },
+    {
+      "component": "tabs",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/tabs.json",
+      "sha256": "b4552a0329dd9a6e2bfaf03405c133874df5a4930c7bb3dd84c9ab5c45b89402"
+    },
+    {
+      "component": "textarea",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/textarea.json",
+      "sha256": "8f01f6bc4ee556263bae7644e8b527022fa77ff203f33a258bb47142ef7d9c81"
+    },
+    {
+      "component": "tooltip",
+      "url": "https://ui.shadcn.com/r/styles/base-nova/tooltip.json",
+      "sha256": "2f55867faecee2d3616cfd8c6a80b538909a21e62fdfa2788b1ead56093e5395"
+    }
+  ]
+}

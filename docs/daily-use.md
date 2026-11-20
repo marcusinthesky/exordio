@@ -51,6 +51,11 @@ queries or fragments. Body links retain ordinary Markdown URL/section syntax.
 
 Language commands use namespaces such as `just python::run Ada` and
 `just typescript::run Ada`. Consult each workspace README for builds and tests.
+With TypeScript components, use `just dev` for the web application and
+`just typescript::storybook` for the UI catalog. `just services-up` explicitly
+starts local PostgreSQL and Mailpit; `just typescript::db-migrate` applies existing
+migrations. Use `just services-down` when finished. Both generation and shell
+entry leave these services stopped.
 
 `just check` validates without repair; `just fmt` writes formatting changes.
 `just sync` explicitly refreshes installed views. `just links` checks external

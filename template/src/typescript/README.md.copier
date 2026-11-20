@@ -1,0 +1,126 @@
+[% if typescript_components %]
+---
+description: One complete Next.js stack with a shared design system and local services.
+---
+
+# TypeScript with components
+
+The **Initialise with components** checkbox installs one supported application
+stack. All TypeScript code stays under this directory: `apps/web` owns Next.js
+routes, authentication, persistence and product features; `packages/ui` owns
+React components, layouts, Tailwind tokens and their Storybook catalog.
+
+## Start locally
+
+From the generated repository root, in its pinned `devenv shell`:
+
+```bash
+just setup
+just dev
+```
+
+Setup installs the committed Bun lock and creates a private, ignored
+`apps/web/.env.local` once. It never replaces an existing configuration. `just dev`
+starts local PostgreSQL and Mailpit, applies committed migrations, then starts
+Next.js. Open the address printed by Next.js (normally <http://localhost:3000>).
+Create a local account, add a project, then edit, filter or delete it. Records are
+scoped to the signed-in user. No hosted account or API key is needed.
+
+In another terminal, use `just typescript::storybook` to browse the same components
+and themes. `just services-down` stops the local database and email preview.
+Devenv may allocate available ports; its exported `DATABASE_URL` and `SMTP_PORT`
+take precedence over the local configuration. Mailpit shows the address of its
+local inbox when services start.
+
+## Included stack
+
+| Concern | Supported implementation |
+| --- | --- |
+| Application | Next.js App Router, React, Node.js 24 |
+| Packages and commands | Bun workspaces, Just, frozen lock |
+| UI | Official shadcn Base UI sources, Tailwind CSS, Lucide, Sonner |
+| Shared UX | App shell, page headers, empty states, tables, charts, light/dark themes |
+| Forms | React Hook Form and Zod |
+| Persistence | PostgreSQL and Drizzle, committed SQL migrations |
+| Accounts | Self-hosted Better Auth with database sessions and local SMTP |
+| Quality | Strict TypeScript, Biome, Knip, enforced UI import boundaries |
+| Tests | Vitest, Storybook browser interactions/accessibility, Playwright E2E and screenshots |
+
+Packages are pinned in manifests and `bun.lock`. Bun installs and runs scripts;
+Next.js and the development tools execute with Node. No task graph or second
+component system is required.
+
+## Work and validate
+
+```bash
+just services-up
+just typescript::db-migrate
+just typescript::browser-setup
+just check
+```
+
+Nix supplies Chromium. Outside Nix, `browser-setup` explicitly downloads the
+browser matching the pinned Playwright release. Ordinary checks never fetch it.
+The complete gate runs lint, architecture checks, strict types, unit tests,
+production and Storybook builds, component interactions, browser journeys,
+accessibility, and visual regression. Services and migrations must be prepared
+first. Checks write only ignored build/test output; they never update source,
+locks, migrations or image baselines.
+
+Use `just typescript::test` for fast unit tests, `test-stories` for the component
+suite, `test-e2e` for the built application, or `test-visual` for built Storybook.
+Browser failures leave traces and HTML reports in `src/typescript/test-results`
+and `src/typescript/playwright-report`. Run `just typescript::fmt` to explicitly
+format sources.
+
+Screenshot baselines target Linux x86-64. On ARM, the same stories still run
+interaction, accessibility and layout checks; pixel comparisons are explicitly
+skipped. To intentionally accept a design change, run
+`just typescript::visual-update` on Linux x86-64 and review the image diff before
+committing. Missing baselines are errors in ordinary checks.
+
+## Make a feature
+
+Start with the projects feature under `apps/web/src/features/projects`. Validate
+incoming data with Zod; authenticate and check ownership in every server mutation.
+Compose existing UI instead of creating new colors or behavior implementations.
+The UI package exposes direct imports and contains no Next.js, authentication or
+database dependencies. Its [catalog and contribution guide](packages/ui/README.md)
+explain how to add primitives and stories. Read the [application guide](apps/web/README.md)
+for account flows, email delivery, migrations and deployment.
+
+## Updates
+
+This is one whole stack, not independent choices for each library. Same-variant
+Copier upgrades preserve saved selections and surface authored-source conflicts
+for review. Switching an existing TypeScript project between the lean and
+components variants is deliberately rejected: generate a fresh project and
+migrate reviewed code and data explicitly. This prevents Copier from removing
+an authored library or application when the starter structure changes.
+
+See [architecture](ARCHITECTURE.md) for ownership and theme conventions.
+[% else %]
+---
+description: A locked Bun workspace with a shared TypeScript library and runnable app.
+---
+
+# TypeScript
+
+`packages/core` exports a typed function; `apps/example-app` consumes it through a
+workspace dependency. Bun runs and tests the application directly. TypeScript
+checks the whole workspace, and Biome handles formatting and lint.
+
+```bash
+just typescript::setup
+just typescript::run Ada
+just typescript::check
+```
+
+Setup installs the committed lock without rewriting it. Checks invoke installed
+tools and do not fetch packages. Builds write an executable Bun bundle to ignored
+`dist/`. Add packages under `packages/` and apps under `apps/`; update `bun.lock`
+explicitly when changing their dependencies. The example identifiers are stable
+so their complete lock can be shared by every generated project.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the package boundary.
+[% endif %]

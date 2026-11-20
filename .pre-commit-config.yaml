@@ -21,7 +21,7 @@ repos:
         always_run: true
       - id: actionlint
         name: GitHub Actions workflows
-        entry: bash -c 'actionlint .github/workflows/*.yml template/.github/workflows/*.yml'
+        entry: bash -c 'actionlint .github/workflows/*.yml'
         language: system
         pass_filenames: false
         always_run: true

@@ -33,3 +33,10 @@ kilo.jsonc
 .ty_cache/
 site/
 .cache/
+
+# Generated TypeScript application/catalog artifacts.
+**/storybook-static/
+**/playwright-report/
+**/test-results/
+**/coverage/
+**/next-env.d.ts

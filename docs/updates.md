@@ -40,3 +40,21 @@ Projects from the earlier profile/stack prototype need regeneration or a manual
 migration; there is no legacy converter. A project created from another source
 repository keeps that source in its Copier answers; it does not switch to
 Exordio automatically.
+
+## Switch TypeScript variants
+
+`typescript_components` is saved with the TypeScript selection. Normal updates
+retain it even if a future template changes its default. Adding TypeScript with
+components to a project that previously had no TypeScript is supported.
+
+Changing an existing TypeScript project from basic to components, or back again,
+is deliberately rejected before Copier writes files. The two variants have
+different application/package paths and lockfiles; an automatic switch could
+remove customized code. This guard uses the existing Copier answers file.
+
+To migrate, commit current work and generate the desired variant in a new
+sibling directory at the intended template version. Port application code and
+configuration deliberately, retaining existing data and migration history.
+Review every removed path, run setup and the complete check in the new project,
+then adopt it. Do not bypass the guard by editing saved answers in place: that
+would cause future updates to treat the old project as a different template.

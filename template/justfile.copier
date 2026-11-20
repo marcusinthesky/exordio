@@ -28,6 +28,22 @@ setup:
 [% endif %]
     prek install
 
+[% if typescript_components %]
+# Start the local PostgreSQL and Mailpit services explicitly.
+services-up:
+    devenv up -d
+    devenv processes wait --timeout 120
+
+# Stop this project's local services.
+services-down:
+    devenv down
+
+# Start services, apply committed migrations, and run the Next.js application.
+dev: services-up
+    just typescript::db-migrate
+    just typescript::dev
+
+[% endif %]
 # Check source, views and selected languages without repairing files.
 check:
     bash infra/nix/check.sh

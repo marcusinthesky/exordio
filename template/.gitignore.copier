@@ -16,14 +16,22 @@ result
 result-*
 .env
 .env.*
+!.env.example
 .DS_Store
 *.bak
 .turbo/
 .next/
 .source/
 *.tsbuildinfo
-web/
-print/
+[% if typescript_components %]
+storybook-static/
+playwright-report/
+test-results/
+coverage/
+next-env.d.ts
+[% endif %]
+/src/lean/blueprint/web/
+/src/lean/blueprint/print/
 lean_decls
 [% if agents %]
 /AGENTS.md

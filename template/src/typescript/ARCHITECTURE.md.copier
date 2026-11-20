@@ -1,0 +1,91 @@
+[% if typescript_components %]
+---
+description: A complete application stack with two enforced ownership boundaries.
+---
+
+# TypeScript components architecture
+
+There are two workspaces and one lock: `@exordio/web` and `@exordio/ui`. The
+application owns routes, data, credentials, authentication and feature behavior.
+The UI package owns presentation, interaction primitives, layouts, semantic
+Tailwind tokens and stories. It is consumed directly as TypeScript source;
+Next.js transpiles it and Storybook uses Vite. There is no publishing or UI build
+pipeline to coordinate.
+
+## Follow the dependency direction
+
+`web` may import `ui`. `ui` cannot import the app, Node built-ins, Next.js,
+Better Auth, Drizzle, PostgreSQL, or an undeclared runtime dependency.
+`just typescript::boundaries` inspects TypeScript import syntax and rejects those
+violations, including dynamic imports and relative paths escaping the package.
+Next.js `server-only` markers protect database, email and session code from client
+bundles. Database mutations repeat authentication and ownership checks on the
+server; a hidden button is never the authorization boundary.
+
+Keep app-local feature modules together. A generic table accepts typed data and
+callbacks; its project query and server actions belong to `web`. Do not create
+packages for auth, databases, utilities or configuration without a concrete
+consumer requiring them.
+
+## Theme and source ownership
+
+The official shadcn Base UI sources are vendored with license/provenance in the
+UI package. Their normal CLI configuration remains usable. Upstream registry
+changes are explicitly reviewed as source changes; dependency automation alone
+does not update copied components.
+
+One shared stylesheet maps semantic CSS variables into Tailwind utilities.
+Light/dark variants, charts, feedback, surfaces and focus states use the same
+tokens. Both Next.js and Storybook import it and scan UI plus app sources.
+Colocated stories document meaningful variants and states. A local font package
+keeps builds and screenshots independent of online font services.
+
+## Execution and ownership
+
+Generation emits data only. Setup installs frozen dependencies and creates only
+an ignored local environment file. Local service startup and applying committed
+migrations are explicit. `db-generate`, `fmt` and `visual-update` author files;
+checks only report defects and write ignored results. Shell entry resolves no
+credentials and performs no database changes.
+
+Next.js uses Node 24 while Bun manages workspace dependencies. Stable package
+identifiers keep a complete lock shared across generated projects. The same UI
+package hosts Storybook; it is a development catalog, not a second product.
+Neither deployment nor a hosted authentication, database or visual-testing
+service is assumed.
+
+## Verification
+
+Unit tests cover validation, environment constraints and mutation authorization.
+Storybook uses real Chromium for component interactions and accessibility.
+Playwright exercises account/project workflows in a production build and checks
+curated Storybook layouts against reviewed Linux x86-64 images. The default
+`check` gate composes these commands. Browser/service preparation belongs to
+setup, not checks, so prepared projects can be validated without network access.
+[% else %]
+---
+description: Why the TypeScript starter uses Bun workspaces and direct tool commands.
+---
+
+# TypeScript workspace
+
+Bun owns runtime execution, workspace dependency installation and tests. A library
+and its executable consumer demonstrate the package boundary without a framework.
+TypeScript provides strict static checks and Biome provides formatting and lint.
+
+| Concern | Owner |
+| --- | --- |
+| Dependencies | Committed `bun.lock` |
+| Application and library code | Their workspace packages |
+| Build output | Ignored `dist/` |
+| Cross-language commands | Root justfile |
+
+The starter has no task scheduler: the workspace is small enough for direct
+commands. A generated project can add a build graph when its dependencies justify
+one. Installation happens in setup; checks execute locally installed tools.
+
+Script commands explicitly use Bun for JavaScript command-line tools rather than
+depending on an ambient Node installation. The Linux devenv selects Biome's
+static musl executable from the locked optional packages, avoiding an assumption
+about a machine-level ELF loader on NixOS.
+[% endif %]

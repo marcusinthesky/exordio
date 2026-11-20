@@ -1,0 +1,71 @@
+[% if typescript_components %]
+{
+  "name": "exordio-typescript",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "bun --cwd apps/web run dev",
+    "start": "bun --cwd apps/web run start",
+    "build": "bun --cwd apps/web run build",
+    "typecheck": "bun --cwd apps/web run typecheck && bun --cwd packages/ui run typecheck && tsc --noEmit",
+    "lint": "biome check . && knip && node scripts/check-boundaries.mjs",
+    "format": "biome check --write .",
+    "knip": "knip",
+    "test": "node node_modules/vitest/vitest.mjs run --config vitest.config.ts",
+    "test:stories": "bun --cwd packages/ui run test:stories",
+    "test:e2e": "node node_modules/@playwright/test/cli.js test --config playwright.config.ts",
+    "test:visual": "node node_modules/@playwright/test/cli.js test --config playwright.visual.config.ts",
+    "storybook": "bun --cwd packages/ui run storybook",
+    "storybook:build": "bun --cwd packages/ui run storybook:build",
+    "db:migrate": "bun --cwd apps/web run db:migrate",
+    "db:generate": "bun --cwd apps/web run db:generate"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.8",
+    "typescript": "5.9.3",
+    "knip": "6.43.0",
+    "vitest": "5.1.1",
+    "vite": "8.3.8",
+    "@playwright/test": "1.65.1",
+    "@axe-core/playwright": "4.14.0",
+    "@types/node": "24.10.1"
+  },
+  "trustedDependencies": [
+    "@tailwindcss/oxide",
+    "esbuild",
+    "sharp"
+  ]
+}
+[% else %]
+{
+  "name": "example-typescript",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "run": "bun run apps/example-app/src/main.ts",
+    "build": "bun build apps/example-app/src/main.ts --target=bun --outdir=dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check . && knip",
+    "format": "biome check --write .",
+    "test": "bun test",
+    "knip": "knip"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.8",
+    "@types/bun": "1.3.13",
+    "typescript": "5.9.3",
+    "knip": "6.43.0"
+  }
+}
+[% endif %]

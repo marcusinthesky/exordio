@@ -38,6 +38,10 @@ just test tests/test_workflows.py
 just check
 ```
 
+To exercise the complete TypeScript stack, render with both
+`-d 'languages=["typescript"]'` and `-d typescript_components=true`.
+Its dedicated CI job runs independently of the TeX preparation job.
+
 Choose a new destination each time. Native Copier rendering includes uncommitted
 changes and does not alter the source index. To execute the preview's commands,
 initialize Git there, enter its own Devenv shell and run setup.

@@ -13,7 +13,10 @@ the catalog. Separate independently versioned add-ons are unnecessary here.
 Two independent workflow choices supply planning and references. Four independent
 languages supply runnable examples. All default to empty. AgentSync and
 SecretSpec remain optional integrations; Nix is the shared environment foundation.
-There are no workflow bundles, cloud scaffolds or implicit research applications.
+TypeScript has one additional boolean: initialise with components. It selects a
+fixed Next.js application and shared UI package together, rather than independent
+library choices. The ordinary Bun CLI/library remains the default. There are no
+cloud scaffolds or implicit research applications.
 
 Copier uses bracket delimiters and the `.copier` suffix so Insitu Jinja and GitHub
 expressions retain their own syntax. Generation runs no tasks. Dependencies are
@@ -58,8 +61,17 @@ files, unexpected links and symlinked parents stop setup without replacement.
 Without AgentSync, projects can author their own instructions outside template ownership.
 SecretSpec resolves credentials only for an explicit subprocess.
 
-Python and TypeScript retain separate library/application packages. Lean and
-Mathlib move together; LeanArchitect extracts blueprint content from compiled
+Python and TypeScript retain separate library/application packages. The TypeScript
+components variant has two workspaces: `apps/web` owns routes, authentication,
+persistence and feature behavior; `packages/ui` owns presentation, Tailwind tokens,
+layouts and colocated Storybook stories. Import checks enforce this boundary.
+One committed lock versions the stack. Node runs Next.js and browser tooling;
+Bun installs workspaces and executes commands. Development PostgreSQL and Mailpit
+run only when explicitly started. Secrets live in ignored local configuration.
+Switching an existing TypeScript variant is a manual migration: Copier rejects
+that answer change before writing files. Ordinary updates preserve the selection.
+
+Lean and Mathlib move together; LeanArchitect extracts blueprint content from compiled
 annotations. LeanBlueprint renders that content through plasTeX. Its nested Lake
 workspace uses direct rendering commands rather than a custom upstream adapter.
 Lean provides its own blueprint dependencies independently of manuscript LaTeX.

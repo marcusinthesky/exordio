@@ -1,0 +1,110 @@
+[% if typescript_components %]
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+default:
+    @just --list
+
+# Install the committed lock, then prepare a private local configuration once.
+setup:
+    test -f bun.lock || { echo 'Restore the committed bun.lock before setup.' >&2; exit 1; }
+    bun install --frozen-lockfile
+    node scripts/setup.mjs
+
+# Nix supplies Chromium; other Linux environments prepare the locked browser here.
+browser-setup:
+    if [ -z "${PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH:-}" ]; then node node_modules/@playwright/test/cli.js install chromium; fi
+
+dev:
+    bun run dev
+
+start:
+    bun run start
+
+build:
+    bun run build
+
+lint:
+    bun run lint
+
+typecheck:
+    bun run typecheck
+
+knip:
+    bun run knip
+
+boundaries:
+    node scripts/check-boundaries.mjs
+
+test:
+    bun run test
+
+test-stories:
+    bun run test:stories
+
+test-e2e:
+    bun run test:e2e
+
+test-visual:
+    bun run test:visual
+
+# Explicit baseline update: review image diffs before committing.
+visual-update:
+    node node_modules/@playwright/test/cli.js test --config playwright.visual.config.ts --update-snapshots
+
+storybook:
+    bun run storybook
+
+storybook-build:
+    bun run storybook:build
+
+# Apply committed migrations to the configured database; never done on shell entry.
+db-migrate:
+    bun run db:migrate
+
+# Explicitly author a migration after reviewing schema changes.
+db-generate:
+    bun run db:generate
+
+# Services/migrations and browser preparation must be completed before this gate.
+deps:
+    @test -s bun.lock || { echo "Missing bun.lock; restore the committed lockfile." >&2; exit 1; }
+    @test -d node_modules || { echo "Dependencies are missing; run just setup first." >&2; exit 1; }
+
+check: deps lint typecheck test build storybook-build test-stories test-e2e test-visual
+
+fmt:
+    bun run format
+[% else %]
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set positional-arguments
+
+default:
+    @just --list
+
+setup:
+    bun install --frozen-lockfile
+
+run name="world":
+    bun run apps/example-app/src/main.ts "$1"
+
+build:
+    bun --bun run build
+
+lint:
+    bun --bun run lint
+
+typecheck:
+    bun --bun run typecheck
+
+knip:
+    bun --bun run knip
+
+test:
+    bun --bun run test
+
+check: lint typecheck test build
+
+fmt:
+    bun --bun run format
+[% endif %]
