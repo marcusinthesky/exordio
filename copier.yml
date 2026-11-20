@@ -44,10 +44,21 @@ languages:
   choices:
     "Python: a typed library and application": python
     "TypeScript: a Bun library and CLI": typescript
+    "Go: a native module with a library and CLI": go
     "Rust: a native library and CLI with strict quality checks": rust
     "Lean4: Mathlib, LeanArchitect and LeanBlueprint": lean
     "LaTeX: a Tectonic article": latex
   default: []
+
+go_module:
+  type: str
+  when: "[[ 'go' in languages ]]"
+  help: Go module import path (for GitHub publication, include /src/go).
+  default: "example.com/[[ project_slug ]]"
+  validator: >-
+    [% if 'go' in languages and not (go_module | regex_search('^[a-z0-9]+(?:[.-][a-z0-9]+)*[.][a-z0-9]+(?:/[A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?)+\Z')) %]
+    Use a module import path such as example.com/my-project or github.com/owner/repo/src/go, without a URL scheme, spaces or traversal.
+    [% endif %]
 
 agents:
   type: str
@@ -98,6 +109,7 @@ _exclude:
   - "[% if 'python' not in languages %]src/python/justfile[% endif %]"
   - "[% if 'python' not in languages %]src/python/ARCHITECTURE.md[% endif %]"
   - "[% if 'typescript' not in languages %]src/typescript[% endif %]"
+  - "[% if 'go' not in languages %]src/go[% endif %]"
   - "[% if 'rust' not in languages %]src/rust[% endif %]"
   - "[% if 'lean' not in languages %]src/lean[% endif %]"
   - "[% if 'lean' not in languages %]infra/nix/pkgs/lean-toolchain.nix[% endif %]"

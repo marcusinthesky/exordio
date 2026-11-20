@@ -41,7 +41,9 @@ small contracts: work item, reference and the 1,500-token entry budget.
 
 ## Keep execution explicit
 
-Devenv pins tools on Linux x86-64 and ARM64. Language workspaces and PEP 723 repository scripts have separate frozen locks. Setup can download inputs and create ignored
+Devenv pins tools on Linux x86-64 and ARM64. Language workspaces and PEP 723
+repository scripts own their dependency manifests and locks. Go uses its native
+module manifest and checksums. Setup can download inputs and create ignored
 environments; checks use prepared inputs and never repair tracked files.
 
 Nix builds AgentSync directly from its pinned Rust source and Cargo lock.
@@ -58,7 +60,13 @@ files, unexpected links and symlinked parents stop setup without replacement.
 Without AgentSync, projects can author their own instructions outside template ownership.
 SecretSpec resolves credentials only for an explicit subprocess.
 
-Python and TypeScript retain separate library/application packages. Rust uses one
+Python and TypeScript retain separate library/application packages. Go uses one
+module under `src/go`, with a reusable package and a thin command under `cmd/`.
+Its module identity is an explicit Copier answer; Nix supplies the Go tools and
+C compiler for race detection. Go checks run offline after setup, while
+`go::security` explicitly consults the current vulnerability database.
+
+Rust uses one
 package under `src/rust`, with a library, a thin CLI and a committed Cargo lock.
 Nix supplies the matched compiler, Clippy, rustfmt and Cargo subcommands. Its
 ordinary checks run offline after setup, including Nextest, doctests, rustdoc and

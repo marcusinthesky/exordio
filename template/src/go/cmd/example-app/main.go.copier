@@ -1,0 +1,25 @@
+package main
+
+import (
+	"fmt"
+	"io"
+	"os"
+
+	"[[ go_module ]]/greet"
+)
+
+func run(args []string, stdout io.Writer) error {
+	name := "world"
+	if len(args) > 0 {
+		name = args[0]
+	}
+	_, err := fmt.Fprintln(stdout, greet.Message(name))
+	return err
+}
+
+func main() {
+	if err := run(os.Args[1:], os.Stdout); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
