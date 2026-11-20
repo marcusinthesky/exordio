@@ -1,0 +1,8 @@
+{
+  "zero2repo": "zero2repo",
+  "template_ref": "2906348db90094c03cfccae49aa9daaa89973138",
+  "seed": 42,
+  "agent_timeout_sec": 7200,
+  "test_timeout_sec": 7200,
+  "stall_window_sec": 2100
+}

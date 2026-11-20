@@ -1,0 +1,6 @@
+{
+  "name": "pydantic-coder",
+  "command": "false",
+  "run_as": "root",
+  "image_backend": "codex"
+}

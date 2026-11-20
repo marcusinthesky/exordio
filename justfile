@@ -24,6 +24,10 @@ test-changed *args:
 test-parallel *args:
     {{ uv }} pytest --no-testmon -n 2 "$@"
 
+# Prepare, run or report the optional Zero2Repo comparison.
+bench *args:
+    {{ uv }} --group bench python -m bench.run "$@"
+
 # Validate sources, generated projects and documentation.
 check:
     bash template/infra/nix/check.sh

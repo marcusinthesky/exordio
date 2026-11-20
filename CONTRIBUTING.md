@@ -48,6 +48,10 @@ Add a behavioral regression when changing a retained contract. Preserve native
 coverage and update tests; do not replace them with assertions about source text.
 See [tests](tests/README.md) for focused commands.
 
+The optional [Zero2Repo comparison](bench/README.md) measures agent task delivery
+from blank and Exordio starters. Its preparation and model runs are separate from
+ordinary checks.
+
 ## Documentation
 
 ```bash
