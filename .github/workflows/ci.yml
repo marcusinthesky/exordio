@@ -68,10 +68,12 @@ jobs:
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["typescript"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["go"]'}
           - {runner: ubuntu-24.04-arm, kind: project, workflows: '[]', languages: '["go"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["rust"]'}
+          - {runner: ubuntu-24.04-arm, kind: project, workflows: '[]', languages: '["rust"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["lean"]'}
           - {runner: ubuntu-24.04, kind: project, workflows: '[]', languages: '["latex"]'}
-          - {runner: ubuntu-24.04, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","go","lean","latex"]'}
-          - {runner: ubuntu-24.04-arm, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","go","lean","latex"]'}
+          - {runner: ubuntu-24.04, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","go","rust","lean","latex"]'}
+          - {runner: ubuntu-24.04-arm, kind: project, workflows: '["planning","reference"]', languages: '["python","typescript","go","rust","lean","latex"]'}
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262

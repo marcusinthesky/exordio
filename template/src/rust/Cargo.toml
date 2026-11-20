@@ -1,0 +1,20 @@
+[package]
+name = "example-app"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+publish = false
+description = "A small Rust library and command-line application"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unreachable_pub = "warn"
+unused_must_use = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"

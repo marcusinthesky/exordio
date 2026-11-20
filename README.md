@@ -43,6 +43,7 @@ default to empty. The example pins the `v0.1.0` release.
 | Python | A typed library and application in one uv workspace |
 | TypeScript | A Bun library and CLI workspace |
 | Go (upcoming) | A Go module with a reusable package, CLI and native quality checks |
+| Rust (upcoming) | A native library and CLI with Clippy, Nextest and dependency checks |
 | Lean4 | Mathlib proofs, LeanArchitect and a LeanBlueprint graph/PDF |
 | LaTeX | A Tectonic article; references can generate its bibliography |
 | AgentSync | Shared instructions projected into Codex and/or Claude configuration |
@@ -54,6 +55,9 @@ Nix supports every selection; no cloud infrastructure is created.
 
 Go support is available in the development template and is not part of `v0.1.0`.
 See the [feature guide](docs/features.md#go-development-preview) to preview it locally.
+
+Rust support is available in the development template and is not part of `v0.1.0`.
+See the [feature guide](docs/features.md#rust-development-preview) to preview it locally.
 
 ## Let your agent help
 

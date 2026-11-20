@@ -77,7 +77,7 @@ def test_supported_compositions(
             json.loads(path.read_text())
         elif path.suffix in {".yml", ".yaml"}:
             list(yaml.safe_load_all(path.read_text()))
-        elif path.suffix == ".toml" or path.name == "uv.lock":
+        elif path.suffix == ".toml" or path.name in {"uv.lock", "Cargo.lock"}:
             tomllib.loads(path.read_text())
     run(["nixfmt", "--check", "devenv.nix", *map(str, (repo / "infra/nix").rglob("*.nix"))], repo)
     run(["statix", "check", "infra/nix"], repo)
@@ -101,6 +101,21 @@ def test_supported_compositions(
     if workflows:
         assert "{{" in "".join(p.read_text() for p in (repo / "insitu").rglob("*.j2"))
     assert "${{" in (repo / ".github/workflows/ci.yml").read_text()
+
+
+def test_rust_selection_has_no_implicit_workflow_or_other_language(
+    template_source: Path, tmp_path: Path
+) -> None:
+    repo = tmp_path / "project"
+    render(template_source, repo, {"languages": ["rust"]})
+
+    assert answers(repo)["workflows"] == []
+    assert sorted(path.name for path in (repo / "src").iterdir()) == ["rust"]
+    manifest = tomllib.loads((repo / "src/rust/Cargo.toml").read_text())
+    lock = tomllib.loads((repo / "src/rust/Cargo.lock").read_text())
+    assert manifest["package"]["name"] == "example-app"
+    assert lock["package"] == [{"name": "example-app", "version": "0.1.0"}]
+    assert not (repo / "src/rust/target").exists(), "Rendering must not run Cargo"
 
 
 @pytest.mark.parametrize(

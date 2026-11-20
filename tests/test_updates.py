@@ -149,3 +149,37 @@ def test_adding_go_and_later_updates_preserve_module_identity_and_authored_code(
     assert {path: path.read_bytes() for path in preserved} == preserved
     assert "Updated Go guidance." in (repo / "src/go/README.md").read_text()
     assert f'"{module}/greet"' in (repo / "src/go/cmd/example-app/main.go").read_text()
+
+
+def test_rust_can_be_added_and_updated_without_replacing_authored_code(tmp_path: Path) -> None:
+    source = snapshot_template(tmp_path / "catalog")
+    repo = tmp_path / "project"
+    render(source, repo, ref="v0.1.0")
+    git(repo, "init", "--quiet", "--initial-branch=main")
+    instructions = repo / "AGENTS.md"
+    instructions.write_text("# Project instructions\n\nPreserve project-specific guidance.\n")
+    commit_all(repo, "feat(project): initialize without languages")
+    assert not (repo / "src/rust").exists()
+    release(source)
+
+    selection = tmp_path / "rust-selection.yml"
+    selection.write_text(yaml.safe_dump({"languages": ["rust"]}))
+    update(repo, "--data-file", str(selection))
+    assert answers(repo)["languages"] == ["rust"]
+    assert answers(repo)["workflows"] == []
+    assert (repo / "src/rust/Cargo.lock").is_file()
+    library = repo / "src/rust/src/lib.rs"
+    library.write_text(library.read_text() + '\npub const PROJECT_NAME: &str = "authored";\n')
+    before = {path: path.read_bytes() for path in (instructions, library)}
+    commit_all(repo, "feat(project): customize Rust library")
+
+    guidance = source / "template/src/rust/ARCHITECTURE.md"
+    guidance.write_text(guidance.read_text() + "\nUpdated Rust template guidance.\n")
+    commit_all(source, "docs(template): refine Rust guidance")
+    git(source, "tag", "v0.3.0")
+    update(repo)
+
+    assert answers(repo)["_commit"] == "v0.3.0"
+    assert answers(repo)["languages"] == ["rust"]
+    assert {path: path.read_bytes() for path in before} == before
+    assert "Updated Rust template guidance." in (repo / "src/rust/ARCHITECTURE.md").read_text()

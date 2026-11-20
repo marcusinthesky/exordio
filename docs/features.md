@@ -30,6 +30,7 @@ Without reference records, LaTeX owns its ordinary `refs.bib` directly.
 | `python` | Typed library imported by an application in a locked uv workspace |
 | `typescript` | Bun library imported by a runnable CLI workspace |
 | `go` (upcoming) | Reusable package and CLI in one Go module, with lint, tests and race detection |
+| `rust` (development preview) | Rust library and CLI in one locked Cargo package |
 | `lean` | Mathlib proofs with LeanArchitect annotations and a LeanBlueprint graph/PDF |
 | `latex` | A Tectonic article with cached local builds |
 
@@ -56,6 +57,40 @@ The `go_module` answer defaults to `example.com/<project_slug>`. For a module
 published directly from GitHub, use `github.com/OWNER/REPOSITORY/src/go` because
 the module lives below the repository root. The generated Go README explains
 dependency updates, package boundaries and module release tags.
+
+### Rust development preview
+
+Rust support belongs to the development template, not the published `v0.1.0`
+release. From a checkout containing the Rust support, render a fresh project:
+
+```bash
+env -u PYTHONPATH -u PYTHONHOME uvx --from copier==9.16.0 copier copy --defaults --vcs-ref HEAD -d 'languages=["rust"]' . ../rust-example
+cd ../rust-example
+git init -b main
+bash infra/nix/install-devenv.sh
+devenv shell
+just setup
+just rust::run Ada
+just check
+```
+
+The starter is one Rust 2024 package under `src/rust`: a reusable library, a thin
+CLI, ordinary tests and documentation examples. It has no third-party runtime
+dependencies. Nix pins the compiler, Cargo, Clippy, rustfmt and the additional
+quality tools; Cargo owns application dependencies through `Cargo.toml` and the
+committed `Cargo.lock`.
+
+`just rust::check` checks formatting, types and borrowing, Clippy diagnostics,
+dependency consistency and unused dependencies, Nextest tests, doctests,
+documentation and a release build. Checks use frozen, offline dependencies after
+setup and leave source files unchanged. `just rust::fmt` writes formatting changes.
+
+`just rust::security` uses cargo-deny with fresh advisory data and the project's
+dependency policies. It is separate from offline checks. `just rust::coverage`
+uses cargo-llvm-cov and the matching LLVM tools; no minimum percentage is imposed.
+The starter's README explains how to extend the policies as dependencies and
+features are introduced. Nightly tools and application-specific fuzz targets are
+not required by the starter.
 
 ## Integrations
 

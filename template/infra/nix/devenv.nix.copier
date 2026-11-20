@@ -53,11 +53,21 @@
       golangci-lint
       govulncheck
 [% endif %]
-[% if 'go' in languages or 'lean' in languages %]
-      stdenv.cc
+[% if 'rust' in languages %]
+      rustc
+      cargo
+      clippy
+      rustfmt
+      cargo-nextest
+      cargo-shear
+      cargo-deny
+      cargo-llvm-cov
 [% endif %]
 [% if agents %]
       (callPackage ./pkgs/agentsync.nix { })
+[% endif %]
+[% if 'go' in languages or 'rust' in languages or 'lean' in languages %]
+      stdenv.cc
 [% endif %]
 [% if 'lean' in languages %]
       (import ./pkgs/lean-toolchain.nix {
@@ -105,6 +115,10 @@
     BIOME_BINARY = "@biomejs/cli-linux-${
       if pkgs.stdenv.hostPlatform.isx86_64 then "x64" else "arm64"
     }-musl/biome";
+[% endif %]
+[% if 'rust' in languages %]
+    LLVM_COV = "${pkgs.rustc.llvmPackages.llvm}/bin/llvm-cov";
+    LLVM_PROFDATA = "${pkgs.rustc.llvmPackages.llvm}/bin/llvm-profdata";
 [% endif %]
 [% if 'lean' in languages %]
     LEAN_BLUEPRINT_CFLAGS = "-I${pkgs.lib.getDev pkgs.graphviz}/include";

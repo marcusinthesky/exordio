@@ -12,6 +12,7 @@ node_modules/
 .lake/
 dist/
 build/
+target/
 result
 result-*
 .env

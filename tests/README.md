@@ -61,3 +61,9 @@ CI prepares x64 TeX resources once using sequential manuscript, reference and
 blueprint fixtures, then passes the resulting Tectonic cache to project jobs.
 Explicit TeX setup retries diagnosed transient bundle-server failures; offline
 checks continue to fail if a required resource is absent.
+
+Rust-only and maximal runtime fixtures exercise the pinned Rust toolchain on
+x86-64 and ARM64. They run Nextest and doctests separately, build and execute the
+CLI, and inject compiler, Clippy, formatting, test, documentation and dependency
+defects. Every rejection checks that source manifests, lockfiles and code remain
+unchanged. Ordinary render/update tests do not require the Rust toolchain.
