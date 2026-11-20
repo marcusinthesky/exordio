@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FolderIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../components/button";
 import { DataTable } from "../components/data-table";
 import { Toaster } from "../components/sonner";
@@ -82,14 +82,55 @@ export const Confirm: Story = {
 };
 
 export const Notification: Story = {
-  render: () => (
+  beforeEach() {
+    toast.dismiss();
+    return () => {
+      toast.dismiss();
+    };
+  },
+  render: (_args, { globals }) => (
     <>
-      <Toaster />
-      <Button onClick={() => toast.success("Your changes have been saved.")}>
-        Show notification
+      <Toaster
+        theme={globals.theme === "dark" ? "dark" : "light"}
+        richColors
+        expand
+        visibleToasts={5}
+        duration={Number.POSITIVE_INFINITY}
+      />
+      <Button
+        onClick={() => {
+          toast("Your workspace is ready.");
+          toast.success("Your changes have been saved.");
+          toast.info("A project update is available.");
+          toast.warning("Your session expires soon.");
+          toast.error("We couldn't save your changes.");
+        }}
+      >
+        Show notifications
       </Button>
     </>
   ),
+  async play({ canvasElement }) {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Show notifications" }),
+    );
+    const body = within(canvasElement.ownerDocument.body);
+    for (const message of [
+      "Your workspace is ready.",
+      "Your changes have been saved.",
+      "A project update is available.",
+      "Your session expires soon.",
+      "We couldn't save your changes.",
+    ]) {
+      const notification = await body.findByText(message);
+      await waitFor(() => expect(notification).toBeVisible());
+    }
+  },
+};
+
+export const NotificationDark: Story = {
+  ...Notification,
+  globals: { theme: "dark" },
 };
 
 export const SearchAndSort: Story = {

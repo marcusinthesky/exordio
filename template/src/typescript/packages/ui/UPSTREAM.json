@@ -8,7 +8,7 @@
     "Workspace imports and local cn helper",
     "Resolve icon placeholders to Lucide",
     "Map font-heading to the shared token",
-    "Sonner receives its theme from the consuming application",
+    "Sonner receives its theme from the consuming application. Override its neutral and rich-color CSS variables with shared semantic tokens on the popover surface for accessible light/dark notification contrast; merge caller style overrides.",
     "Formatting and strict typing fixes",
     "Shared local Inter font and semantic theme tokens.",
     "Use style text children instead of raw HTML injection for chart CSS; stable chart series keys.",
