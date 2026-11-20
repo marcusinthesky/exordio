@@ -18,7 +18,8 @@ configuration conflicts.
 
 Native Insitu integration uses the locked tool environment prepared by setup.
 Toolchain builds are exercised separately by the runtime CI matrix; ordinary
-render tests do not download every language dependency.
+render tests do not download every language dependency. Go-only fixtures run on
+both x86-64 and ARM64, with Go also included in both maximal fixtures.
 
 Run a generated project in its own pinned devenv environment with:
 
@@ -34,6 +35,18 @@ SecretSpec. An agent-only fixture checks native AgentSync without a language
 workspace or Bun installation. Native dependencies are required for every test run; complete
 `just setup` before testing.
 
+Go runtime fixtures use a custom module path and run the CLI through Just.
+Deliberate type, unchecked-error, formatting, test and module-file defects must
+produce the expected diagnostic. Each failing check must preserve its input;
+checks also reject newly created, nonignored files such as an unexpected
+`go.sum`. The clean gate runs again after the probes are restored. Tagged
+upgrade tests add Go to an existing project and preserve its saved module path
+and authored Go files through later updates.
+
+A tiny local Go module proxy and isolated cache verify that setup rejects
+missing checksums without repairing source. The same fixture confirms that
+relative local replacements still resolve when setup uses a temporary modfile.
+
 The render fixtures lint generated documentation and check entry-point budgets.
 Documentation tests execute the printed planning walkthrough and verify native
 Copier previews. Adoption regressions preserve authored agent configuration
@@ -48,6 +61,12 @@ CI prepares x64 TeX resources once using sequential manuscript, reference and
 blueprint fixtures, then passes the resulting Tectonic cache to project jobs.
 Explicit TeX setup retries diagnosed transient bundle-server failures; offline
 checks continue to fail if a required resource is absent.
+
+Rust-only and maximal runtime fixtures exercise the pinned Rust toolchain on
+x86-64 and ARM64. They run Nextest and doctests separately, build and execute the
+CLI, and inject compiler, Clippy, formatting, test, documentation and dependency
+defects. Every rejection checks that source manifests, lockfiles and code remain
+unchanged. Ordinary render/update tests do not require the Rust toolchain.
 
 ## Full-stack TypeScript
 

@@ -10,8 +10,8 @@ the catalog. Separate independently versioned add-ons are unnecessary here.
 
 ## Select capabilities, not profiles
 
-Two independent workflow choices supply planning and references. Four independent
-languages supply runnable examples. All default to empty. AgentSync and
+Two independent workflow choices supply planning and references. Independently
+selected languages supply runnable examples. All default to empty. AgentSync and
 SecretSpec remain optional integrations; Nix is the shared environment foundation.
 TypeScript has one additional boolean: initialise with components. It selects a
 fixed Next.js application and shared UI package together, rather than independent
@@ -44,7 +44,9 @@ small contracts: work item, reference and the 1,500-token entry budget.
 
 ## Keep execution explicit
 
-Devenv pins tools on Linux x86-64 and ARM64. Language workspaces and PEP 723 repository scripts have separate frozen locks. Setup can download inputs and create ignored
+Devenv pins tools on Linux x86-64 and ARM64. Language workspaces and PEP 723
+repository scripts own their dependency manifests and locks. Go uses its native
+module manifest and checksums. Setup can download inputs and create ignored
 environments; checks use prepared inputs and never repair tracked files.
 
 Nix builds AgentSync directly from its pinned Rust source and Cargo lock.
@@ -70,6 +72,19 @@ Bun installs workspaces and executes commands. Development PostgreSQL and Mailpi
 run only when explicitly started. Secrets live in ignored local configuration.
 Switching an existing TypeScript variant is a manual migration: Copier rejects
 that answer change before writing files. Ordinary updates preserve the selection.
+
+Rust uses one
+package under `src/rust`, with a library, a thin CLI and a committed Cargo lock.
+Nix supplies the matched compiler, Clippy, rustfmt and Cargo subcommands. Its
+ordinary checks run offline after setup, including Nextest, doctests, rustdoc and
+dependency hygiene. Security advisories refresh only through `rust::security`;
+coverage is an explicit command with no arbitrary percentage requirement.
+
+Go uses one
+module under `src/go`, with a reusable package and a thin command under `cmd/`.
+Its module identity is an explicit Copier answer; Nix supplies the Go tools and
+C compiler for race detection. Go checks run offline after setup, while
+`go::security` explicitly consults the current vulnerability database.
 
 Lean and Mathlib move together; LeanArchitect extracts blueprint content from compiled
 annotations. LeanBlueprint renders that content through plasTeX. Its nested Lake

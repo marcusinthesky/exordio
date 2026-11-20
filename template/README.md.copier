@@ -65,6 +65,12 @@ just dev
 just typescript::run Ada
 [% endif %]
 [% endif %]
+[% if 'rust' in languages %]
+just rust::run Ada
+[% endif %]
+[% if 'go' in languages %]
+just go::run Ada
+[% endif %]
 [% if 'lean' in languages %]
 just lean::build
 just lean::blueprint-web
@@ -107,6 +113,9 @@ Add tools when the project has a concrete need.
 Edit source[% if workflows %], run `just sync`[% endif %], then `just check`.
 Formatting and synchronization are explicit writes. External links run separately
 through `just links`.
+[% if 'go' in languages %]
+Go vulnerability scanning runs online through `just go::security`.
+[% endif %]
 [% if secrets %]
 
 SecretSpec resolves credentials only for `just secret-run COMMAND`.

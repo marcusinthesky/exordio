@@ -49,8 +49,21 @@ queries or fragments. Body links retain ordinary Markdown URL/section syntax.
 
 ## Run and maintain code
 
-Language commands use namespaces such as `just python::run Ada` and
-`just typescript::run Ada`. Consult each workspace README for builds and tests.
+Language commands use namespaces such as `just python::run Ada`,
+`just typescript::run Ada` and, in the development template, `just rust::run Ada`.
+Consult each workspace README for builds and tests.
+
+Rust projects run formatting checks, compiler and Clippy checks, dependency
+hygiene, Nextest, doctests, documentation and a release build through
+`just rust::check`. After setup these checks use frozen, offline Cargo inputs.
+Run `just rust::security` explicitly to refresh security advisories, or
+`just rust::coverage` for an LLVM coverage report. Review dependency changes and
+commit `Cargo.lock`; setup and validation do not repair it.
+
+Go projects use `just go::run Ada` and
+`just go::check`; the latter checks modules, lint, tests, race detection and
+compilation. Consult each workspace README for builds and dependency updates.
+
 With TypeScript components, use `just dev` for the web application and
 `just typescript::storybook` for the UI catalog. `just services-up` explicitly
 starts local PostgreSQL and Mailpit; `just typescript::db-migrate` applies existing
@@ -60,6 +73,9 @@ entry leave these services stopped.
 `just check` validates without repair; `just fmt` writes formatting changes.
 `just sync` explicitly refreshes installed views. `just links` checks external
 links online, separately from local correctness.
+
+Go's `just go::security` explicitly checks the online vulnerability database.
+It runs separately from the ordinary offline project checks.
 
 AgentSync users can apply/check their native configuration with
 `just agents::apply` and `just agents::check`. SecretSpec users pass a subprocess

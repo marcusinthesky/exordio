@@ -46,7 +46,10 @@ jobs:
             ${{ env.TECTONIC_CACHE_DIR }}
             ~/.cache/mathlib
             ~/.bun/install/cache
-          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/uv.lock', '**/*.py.lock', '**/bun.lock', '**/lake-manifest.json') }}
+            ~/.cache/go-build
+            ~/.cache/golangci-lint
+            ~/go/pkg/mod
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/uv.lock', '**/*.py.lock', '**/bun.lock', '**/lake-manifest.json', '**/go.mod', '**/go.sum') }}
       - name: Install matching devenv
         run: bash infra/nix/install-devenv.sh
       - name: Prepare dependencies
