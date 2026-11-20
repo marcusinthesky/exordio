@@ -10,8 +10,8 @@ the catalog. Separate independently versioned add-ons are unnecessary here.
 
 ## Select capabilities, not profiles
 
-Two independent workflow choices supply planning and references. Four independent
-languages supply runnable examples. All default to empty. AgentSync and
+Two independent workflow choices supply planning and references. Independently
+selected languages supply runnable examples. All default to empty. AgentSync and
 SecretSpec remain optional integrations; Nix is the shared environment foundation.
 There are no workflow bundles, cloud scaffolds or implicit research applications.
 
@@ -58,8 +58,14 @@ files, unexpected links and symlinked parents stop setup without replacement.
 Without AgentSync, projects can author their own instructions outside template ownership.
 SecretSpec resolves credentials only for an explicit subprocess.
 
-Python and TypeScript retain separate library/application packages. Lean and
-Mathlib move together; LeanArchitect extracts blueprint content from compiled
+Python and TypeScript retain separate library/application packages. Rust uses one
+package under `src/rust`, with a library, a thin CLI and a committed Cargo lock.
+Nix supplies the matched compiler, Clippy, rustfmt and Cargo subcommands. Its
+ordinary checks run offline after setup, including Nextest, doctests, rustdoc and
+dependency hygiene. Security advisories refresh only through `rust::security`;
+coverage is an explicit command with no arbitrary percentage requirement.
+
+Lean and Mathlib move together; LeanArchitect extracts blueprint content from compiled
 annotations. LeanBlueprint renders that content through plasTeX. Its nested Lake
 workspace uses direct rendering commands rather than a custom upstream adapter.
 Lean provides its own blueprint dependencies independently of manuscript LaTeX.

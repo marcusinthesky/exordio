@@ -61,6 +61,9 @@ just python::run Ada
 [% if 'typescript' in languages %]
 just typescript::run Ada
 [% endif %]
+[% if 'rust' in languages %]
+just rust::run Ada
+[% endif %]
 [% if 'lean' in languages %]
 just lean::build
 just lean::blueprint-web

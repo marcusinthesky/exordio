@@ -49,8 +49,16 @@ queries or fragments. Body links retain ordinary Markdown URL/section syntax.
 
 ## Run and maintain code
 
-Language commands use namespaces such as `just python::run Ada` and
-`just typescript::run Ada`. Consult each workspace README for builds and tests.
+Language commands use namespaces such as `just python::run Ada`,
+`just typescript::run Ada` and, in the development template, `just rust::run Ada`.
+Consult each workspace README for builds and tests.
+
+Rust projects run formatting checks, compiler and Clippy checks, dependency
+hygiene, Nextest, doctests, documentation and a release build through
+`just rust::check`. After setup these checks use frozen, offline Cargo inputs.
+Run `just rust::security` explicitly to refresh security advisories, or
+`just rust::coverage` for an LLVM coverage report. Review dependency changes and
+commit `Cargo.lock`; setup and validation do not repair it.
 
 `just check` validates without repair; `just fmt` writes formatting changes.
 `just sync` explicitly refreshes installed views. `just links` checks external
