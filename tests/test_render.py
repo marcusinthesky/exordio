@@ -22,6 +22,8 @@ CASES = [
     (["reference"], ["latex"]),
     (["planning"], ["lean"]),
     (["planning"], ["typescript"]),
+    (["planning"], ["go"]),
+    (["reference"], ["go"]),
     (["planning", "reference"], list(LANGUAGES)),
 ]
 
@@ -123,6 +125,9 @@ def test_rust_selection_has_no_implicit_workflow_or_other_language(
         {"project_slug": "has spaces"},
         {"workflows": ["unknown"]},
         {"languages": ["unknown"]},
+        {"languages": ["go"], "go_module": "https://github.com/acme/project"},
+        {"languages": ["go"], "go_module": "example.com/../project"},
+        {"languages": ["go"], "go_module": "example.com/project\nreplace bad => ./bad"},
     ],
 )
 def test_invalid_answers_do_not_create_a_project(
@@ -146,7 +151,34 @@ def test_defaults_and_quoted_identity(template_source: Path, tmp_path: Path) -> 
     )
     assert answers(repo)["workflows"] == []
     assert answers(repo)["languages"] == []
+    assert "go_module" not in answers(repo)
     assert 'Café & "Research"' in (repo / "README.md").read_text()
+
+
+@pytest.mark.parametrize(
+    "module", ["github.com/acme/project/src/go", "example.com/Team/project/v2"]
+)
+def test_go_module_identity_is_saved_and_used_by_the_cli(
+    template_source: Path, tmp_path: Path, module: str
+) -> None:
+    repo = tmp_path / "project"
+    render(template_source, repo, {"languages": ["go"], "go_module": module})
+
+    assert answers(repo)["go_module"] == module
+    assert f"module {module}\n" in (repo / "src/go/go.mod").read_text()
+    assert f'"{module}/greet"' in (repo / "src/go/cmd/example-app/main.go").read_text()
+    assert not (repo / "src/go/go.sum").exists()
+    assert not (repo / "src/go/go.work").exists()
+    assert not (repo / "src/python").exists()
+    assert not (repo / "src/typescript").exists()
+
+
+def test_go_default_module_uses_the_project_slug(template_source: Path, tmp_path: Path) -> None:
+    repo = tmp_path / "project"
+    render(template_source, repo, {"languages": ["go"], "project_slug": "custom-project"})
+
+    assert answers(repo)["go_module"] == "example.com/custom-project"
+    assert "module example.com/custom-project\n" in (repo / "src/go/go.mod").read_text()
 
 
 def test_secret_run_preserves_literal_arguments(template_source: Path, tmp_path: Path) -> None:

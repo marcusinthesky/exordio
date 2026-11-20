@@ -1,0 +1,60 @@
+---
+description: One Go module with a reusable package, CLI and native quality checks.
+---
+
+# Go
+
+This module is `[[ go_module ]]`. The `greet` package exports `Message`, and
+`cmd/example-app` consumes it through the module's import path. Ordinary Go tests
+exercise the package and command. The example uses only the standard library.
+
+Run from the repository root:
+
+```bash
+just go::setup
+just go::run Ada
+just go::check
+```
+
+The command prints `Hello, Ada!`; omitting the name greets `world`.
+`just go::build` writes the executable under ignored `build/` in this directory.
+
+## Checks and formatting
+
+| Command | Purpose |
+| --- | --- |
+| `just go::modules` | Check module-file consistency and downloaded dependency integrity |
+| `just go::lint` | Run golangci-lint, including gofumpt and goimports formatting checks |
+| `just go::typecheck` | Compile packages with the Go compiler |
+| `just go::test` | Execute all Go tests |
+| `just go::race` | Execute tests with the race detector |
+| `just go::check` | Run module checks, lint, tests, race detection and build |
+| `just go::fmt` | Explicitly apply formatting changes |
+| `just go::security` | Check the current Go vulnerability database online |
+
+Setup may download dependencies. Ordinary checks use prepared inputs, disable
+automatic Go toolchain downloads and do not repair tracked files. The Nix
+environment supplies Go, golangci-lint, govulncheck and the C compiler required
+for race detection on Linux x86-64 and ARM64. Race detection exercises only the
+code reached by tests.
+
+## Change dependencies
+
+From `src/go`, update dependencies deliberately with `go get` and `go mod tidy`.
+Commit `go.mod` and `go.sum` when present, then run setup and checks again.
+The initial module has no external dependencies, so it needs no `go.sum`.
+Checks use `go mod tidy -diff` to report drift without applying it.
+
+## Choose a module identity
+
+Copier's `go_module` answer supplies this module's identity and starter imports.
+Its default `example.com/<project_slug>` is suitable for local development.
+For publication directly from GitHub, use a path such as
+`github.com/OWNER/REPOSITORY/src/go`; the `src/go` suffix matches the module's
+location in the repository. Versions of that module use tags such as
+`src/go/v1.0.0`. These are your project's tags, independent of Exordio releases.
+
+Changing the module identity later requires updating its imports and the saved
+Copier answer together. Follow the
+[Go module reference](https://go.dev/ref/mod#module-path) for publication and
+major-version rules. See [ARCHITECTURE.md](ARCHITECTURE.md) for package ownership.
