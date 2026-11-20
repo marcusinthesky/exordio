@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import fcntl
 import hashlib
 import importlib
+import importlib.metadata
 import json
 import math
 import os
 import platform
 import random
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
 import time
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import asdict
 from pathlib import Path
 from unittest.mock import patch
@@ -72,16 +75,13 @@ def tree_identity(root: Path) -> dict:
 
 def configuration(path: Path) -> dict:
     defaults = {
-        "reasoning_effort": "high",
-        "cases": list(CASES),
-        "repetitions": 3,
         "seed": 42,
         "agent_timeout_sec": 7200,
         "test_timeout_sec": 7200,
         "stall_window_sec": 2100,
     }
     supplied = read_json(path)
-    required = {"zero2repo", "template_ref", "model", "codex_version"}
+    required = {"zero2repo", "template_ref"}
     if not isinstance(supplied, dict) or supplied.keys() - defaults.keys() - required:
         raise ValueError("config must be an object containing only documented fields")
     config = defaults | supplied
@@ -91,18 +91,9 @@ def configuration(path: Path) -> dict:
             raise ValueError(f"set {key} explicitly in the config")
     if not re.fullmatch(r"[0-9a-f]{40}", config["template_ref"]):
         raise ValueError("template_ref must be a full commit SHA")
-    if not re.fullmatch(r"\d+\.\d+\.\d+", config["codex_version"]):
-        raise ValueError("codex_version must be an exact release, e.g. 0.123.0")
-    if config["reasoning_effort"] not in ("minimal", "low", "medium", "high", "xhigh"):
-        raise ValueError("unsupported Codex reasoning_effort")
-    cases = config["cases"]
-    if (
-        not isinstance(cases, list)
-        or not cases
-        or any(not isinstance(case, str) or case not in CASES for case in cases)
-        or len(cases) != len(set(cases))
-    ):
-        raise ValueError("cases must be a nonempty, unique subset of the pilot cases")
+    config.update(
+        model="openai-codex:gpt-6-luna", reasoning_effort="medium", cases=list(CASES), repetitions=3
+    )
     for key in ("repetitions", "seed", "agent_timeout_sec", "test_timeout_sec", "stall_window_sec"):
         value = config[key]
         minimum = 0 if key in ("seed", "stall_window_sec") else 1
@@ -156,21 +147,15 @@ def load_upstream(path: Path):
 def implementation_identity() -> dict:
     return {
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
-        for name in ("bench/run.py", "pyproject.toml", "uv.lock")
+        for name in (
+            "bench/run.py",
+            "bench/subscription.py",
+            "bench/agent.json",
+            "bench/prepared.Dockerfile",
+            "pyproject.toml",
+            "uv.lock",
+        )
     } | {"python": sys.version}
-
-
-def provider_identity() -> str:
-    # Credentials never enter the manifest; endpoint/transport changes still invalidate a resume.
-    return digest(
-        {
-            key: os.environ.get(key)
-            for key in (
-                "OPENAI_BASE_URL",
-                "CBRUN_CODEX_GATEWAY_WEBSOCKETS",
-            )
-        }
-    )
 
 
 @contextmanager
@@ -183,13 +168,11 @@ def runtime_environment(config: dict):
     }
     env.update(
         {
-            "CBRUN_CODEX_VERSION": config["codex_version"],
+            "CBRUN_CODEX_VERSION": "0.123.0",
             "CBRUN_CODEX_REASONING_EFFORT": config["reasoning_effort"],
             "CBRUN_PLATFORM": "linux/amd64",
         }
     )
-    if "CBRUN_CODEX_GATEWAY_WEBSOCKETS" in os.environ:
-        env["CBRUN_CODEX_GATEWAY_WEBSOCKETS"] = os.environ["CBRUN_CODEX_GATEWAY_WEBSOCKETS"]
     with patch.dict(os.environ, env, clear=True):
         yield
 
@@ -220,14 +203,90 @@ def checked_exec(container, command: str) -> None:
         raise RuntimeError(f"workspace preparation failed: {result.tail}")
 
 
-def seed_workspace(container, seed: Path | None) -> None:
+def initialize_blank(container) -> None:
     checked_exec(container, 'test -d /app && test -z "$(find /app -mindepth 1 -print -quit)"')
-    if seed is not None:
-        if (seed / ".git").exists():
-            raise ValueError("starter must not contain a Git repository")
-        for child in sorted(seed.iterdir()):
-            container.cp_to(child, "/app/")
     checked_exec(container, "git -C /app init --quiet --initial-branch=main")
+
+
+def prepared_image(
+    runner, base: str, seed: Path, language: str, destination: Path, upstream: Path
+) -> str:
+    """Build the treatment in /app and check it offline before accepting the image."""
+    tag = "exordio-base:" + base.removeprefix("sha256:")
+    subprocess.run(["docker", "tag", base, tag], check=True)
+    image_id = destination / f"{language}.iid"
+    subprocess.run(
+        [
+            "docker",
+            "build",
+            "--build-arg",
+            f"BASE_IMAGE={tag}",
+            "--iidfile",
+            str(image_id),
+            "-f",
+            str(ROOT / "bench/prepared.Dockerfile"),
+            str(seed),
+        ],
+        check=True,
+    )
+    image = image_id.read_text().strip()
+    container = runner.Container.start(image, network="none")
+    try:
+        checked_exec(container, "tar -C /app -xf /opt/exordio-starter.tar")
+        checked_exec(container, "test ! -e /tests/final && git -C /app rev-parse --git-dir")
+        checked_exec(
+            container,
+            f'cd /app && PATH="$(cat /etc/exordio-profile)/bin:$PATH" just {language}::test',
+        )
+        if language == "python":
+            monitor = runner.AccessMonitor(container.container_id)
+            monitor.start()
+            try:
+                python = "/app/src/python/.venv/bin/python"
+                checked_exec(container, f"{python} -I -S -c 'import json'")
+                if monitor.violated.is_set():
+                    raise ValueError("ordinary Python import triggered the case audit")
+                protected = monitor.reconciler.protected
+                if not protected:
+                    raise ValueError("case has no target for the Python access audit")
+                probe = f"open({protected[0]!r}, 'rb').close()"
+                checked_exec(container, f"{python} -I -S -c {shlex.quote(probe)}")
+                monitor.violated.wait(10)
+            finally:
+                events = monitor.stop()
+            if monitor.infra_error or not any(
+                event.get("opener") == "python" and protected[0] in event.get("paths", [])
+                for event in events
+            ):
+                raise ValueError("native monitor could not attribute the controlled Python access")
+        else:
+            hooks = upstream / "benchmark/coding_bench_harbor"
+            for name in (
+                "_cb_import_block.cjs",
+                "_cb_import_block_esm.mjs",
+                "_cb_import_block_hooks.mjs",
+            ):
+                container.cp_to(hooks / name, "/tmp/")
+            for extension, statement in (
+                ("mjs", "await import('path')"),
+                ("cjs", "require('path')"),
+            ):
+                source = (
+                    f"try {{ {statement}; }} catch (e) {{ "
+                    "if (e.code === 'CODING_BENCH_IMPORT_BAN') process.exit(0); throw e; } "
+                    "throw Error('prepared Bun lacks Zero2Repo import protection');"
+                )
+                container.write_file(f"/app/audit-probe.{extension}", source.encode())
+                checked_exec(
+                    container,
+                    "cd /app && CODING_BENCH_IMPORT_BAN=path "
+                    'NODE_OPTIONS="--require /tmp/_cb_import_block.cjs '
+                    '--import /tmp/_cb_import_block_esm.mjs" '
+                    f'"$(cat /etc/exordio-profile)/bin/bun" audit-probe.{extension}',
+                )
+    finally:
+        container.remove()
+    return image
 
 
 def prepare(config_path: Path, destination: Path) -> None:
@@ -258,11 +317,9 @@ def prepare(config_path: Path, destination: Path) -> None:
                 )
             )
         destination.mkdir(parents=True, exist_ok=False)
-        seeds = {}
         for language in sorted({CASES[case] for case in config["cases"]}):
             seed = destination / "seeds" / language
             render_seed(ROOT, config["template_ref"], seed, language)
-            seeds[language] = tree_identity(seed)
         images = {}
         for case_id in config["cases"]:
             print(f"Preparing {case_id} (no model calls)", flush=True)
@@ -276,39 +333,52 @@ def prepare(config_path: Path, destination: Path) -> None:
             frozen["tests_cache_dir"] = str(image.tests_cache_dir)
             frozen["deliverable_image"] = runner.image_identity(image.deliverable_image)["id"]
             frozen["agent_image"] = image.agent_image_id
-            for seed in (None, destination / "seeds" / CASES[case_id]):
-                container = runner.Container.start(image.agent_image_id, network="none")
-                try:
-                    version = runner._probe_cli_version(container, "codex")
-                    if version != f"codex-cli {config['codex_version']}":
-                        raise ValueError(f"CLI pin mismatch: {version!r}")
-                    checked_exec(
-                        container,
-                        "test ! -e /tests/final && test -s /environment/prd/Full_PRD.md "
-                        "&& test -s /environment/Interface_Contract.md",
-                    )
-                    seed_workspace(container, seed)
-                finally:
-                    container.remove()
             images[case_id] = {"image": frozen, "tests": tree_identity(image.tests_cache_dir)}
-            (destination / f"{case_id}.prompt.md").write_text(prompts[case_id])
-        write_json(
-            destination / "campaign.json",
-            {
-                "schema": 1,
-                "config": config,
-                "upstream_commit": UPSTREAM_COMMIT,
-                "implementation": implementation_identity(),
-                "provider": provider_identity(),
-                "host_arch": platform.machine(),
-                "seeds": seeds,
-                "images": images,
-                "prompts": prompts,
-                "plan": schedule(config["cases"], config["repetitions"], config["seed"]),
-                "prepared_at": runner.utc_now(),
-                "preparation_seconds": time.monotonic() - started,
+            language = CASES[case_id]
+            setup_start = time.monotonic()
+            images[case_id]["prepared_agent_image"] = prepared_image(
+                runner,
+                image.agent_image_id,
+                destination / "seeds" / language,
+                language,
+                destination,
+                Path(config["zero2repo"]),
+            )
+            images[case_id]["prepared_image_seconds"] = time.monotonic() - setup_start
+        campaign = {
+            "schema": 3,
+            "agent": {
+                "provider": "openai-codex",
+                "harness": importlib.metadata.version("pydantic-ai-harness"),
+                "pydantic_ai": importlib.metadata.version("pydantic-ai-slim"),
+                "workspace": "/app",
+                "sub_agents": False,
+                "container_filesystem": "unrestricted",
             },
+            "review_rubric": (ROOT / "bench/rubric.md").read_text(),
+            "config": config,
+            "upstream_commit": UPSTREAM_COMMIT,
+            "implementation": implementation_identity(),
+            "host_arch": platform.machine(),
+            "images": images,
+            "prompts": prompts,
+            "plan": schedule(config["cases"], config["repetitions"], config["seed"]),
+            "prepared_at": runner.utc_now(),
+            "preparation_seconds": time.monotonic() - started,
+        }
+        limits = runner.resolve_limits(
+            **{
+                key: config[key]
+                for key in ("agent_timeout_sec", "test_timeout_sec", "stall_window_sec")
+            }
         )
+        for job in schedule(config["cases"], 1, config["seed"]):
+            result = execute_trial(runner, campaign, job, destination, limits, smoke=True)
+            if not valid(result) or result["reward"] != 0 or result.get("judge_exit_code") is None:
+                raise ValueError(
+                    f"native judge smoke failed for {job['id']}: {result.get('error')}"
+                )
+        write_json(destination / "campaign.json", campaign)
         (destination / "campaign.sha256").write_text(
             digest(read_json(destination / "campaign.json")) + "\n"
         )
@@ -352,6 +422,28 @@ def summarize(plan: list[dict], results: dict[str, dict]) -> dict:
             "cost_usd": sum_known(costs) if len(rows) == len(jobs) else None,
             "usage_complete": sum(bool(row.get("complete")) for row in usage),
         }
+    by_case = {}
+    for case in sorted({job["case"] for job in plan}):
+        repetitions = {}
+        differences = []
+        for job in (job for job in plan if job["case"] == case):
+            row = results.get(job["id"])
+            pair = repetitions.setdefault(job["repetition"], {})
+            pair[job["arm"]] = (
+                row["reward"] if row and valid(row) else "missing" if row is None else "invalid"
+            )
+        for pair in repetitions.values():
+            if all(isinstance(pair.get(arm), (float, int)) for arm in ARMS):
+                differences.append(pair["exordio"] - pair["blank"])
+        by_case[case] = {
+            "repetitions": repetitions,
+            "passes": {
+                arm: sum(pair.get(arm) == 1 for pair in repetitions.values()) for arm in ARMS
+            },
+            "paired_difference": sum(differences) / len(repetitions)
+            if len(differences) == len(repetitions)
+            else None,
+        }
     paired = []
     for job in plan:
         if job["arm"] == "blank":
@@ -362,6 +454,7 @@ def summarize(plan: list[dict], results: dict[str, dict]) -> dict:
     complete = len(paired) * 2 == len(plan) and bool(plan)
     return {
         "arms": summary,
+        "cases": by_case,
         "valid_pairs": len(paired),
         "complete": complete,
         "paired_pass_rate_difference": sum(paired) / len(paired) if complete else None,
@@ -388,6 +481,9 @@ def report(destination: Path) -> dict:
             interrupted.append(job["id"])
     summary = summarize(campaign["plan"], results)
     summary["interrupted"] = interrupted
+    summary["prepared_image_seconds"] = {
+        case: record.get("prepared_image_seconds") for case, record in campaign["images"].items()
+    }
     write_json(destination / "summary.json", summary)
     print(json.dumps(summary, indent=2))
     return summary
@@ -409,12 +505,10 @@ def run(destination: Path, *, execute: bool = False) -> None:
 
 
 def execute_campaign(destination: Path, campaign: dict) -> None:
-    if not os.environ.get("OPENAI_API_KEY", "").strip():
-        raise ValueError("OPENAI_API_KEY is required; host Codex login is not mounted")
     if campaign["implementation"] != implementation_identity():
         raise ValueError("adapter, lockfile or Python changed; prepare a new campaign")
-    if campaign["provider"] != provider_identity() or campaign["host_arch"] != platform.machine():
-        raise ValueError("provider settings or host architecture changed; prepare a new campaign")
+    if campaign["host_arch"] != platform.machine():
+        raise ValueError("host architecture changed; prepare a new campaign")
     pending = []
     for job in campaign["plan"]:
         output = destination / "runs" / job["id"]
@@ -430,16 +524,13 @@ def execute_campaign(destination: Path, campaign: dict) -> None:
     config = campaign["config"]
     runner = load_upstream(Path(config["zero2repo"]))
     with runtime_environment(config):
-        for case, text in campaign["prompts"].items():
-            if (destination / f"{case}.prompt.md").read_text() != text:
-                raise ValueError(f"prompt changed: {case}")
-        for language, identity in campaign["seeds"].items():
-            if tree_identity(destination / "seeds" / language) != identity:
-                raise ValueError(f"starter changed: {language}")
         for record in campaign["images"].values():
             image = record["image"]
             if tree_identity(Path(image["tests_cache_dir"])) != record["tests"]:
                 raise ValueError("hidden test cache changed; prepare a new campaign")
+            prepared = record.get("prepared_agent_image")
+            if prepared and runner.image_identity(prepared)["id"] != prepared:
+                raise ValueError("frozen prepared image is unavailable")
             for key in ("agent_image_id", "deliverable_image"):
                 if runner.image_identity(image[key])["id"] != image[key]:
                     raise ValueError("frozen image is unavailable")
@@ -455,15 +546,24 @@ def execute_campaign(destination: Path, campaign: dict) -> None:
         )
         for job in pending:
             output = destination / "runs" / job["id"]
-            write_json(
-                output / "trial.json", execute_trial(runner, campaign, job, destination, limits)
-            )
+            result = execute_trial(runner, campaign, job, destination, limits)
+            write_json(output / "trial.json", result)
             report(destination)
+            if not valid(result):
+                raise ValueError(
+                    f"invalid attempt at {output}; inspect diagnostics before resuming"
+                )
 
 
-def execute_trial(runner, campaign: dict, job: dict, destination: Path, limits) -> dict:
+def execute_trial(
+    runner, campaign: dict, job: dict, destination: Path, limits, *, smoke=False
+) -> dict:
     config = campaign["config"]
     image_data = campaign["images"][job["case"]]["image"]
+    prepared = job["arm"] == "exordio"
+    if prepared:
+        prepared_id = campaign["images"][job["case"]]["prepared_agent_image"]
+        image_data = image_data | {"agent_image": prepared_id, "agent_image_id": prepared_id}
     image = runner.AgentImage(
         **(
             image_data
@@ -480,11 +580,10 @@ def execute_trial(runner, campaign: dict, job: dict, destination: Path, limits) 
         start = time.monotonic()
         try:
             outcome = native_setup(container, invocation, out_dir=out_dir)
-            if outcome is None or outcome.exit_code == 0:
-                seed_workspace(
-                    container,
-                    destination / "seeds" / CASES[job["case"]] if job["arm"] == "exordio" else None,
-                )
+            if (outcome is None or outcome.exit_code == 0) and prepared:
+                checked_exec(container, "tar -C /app -xf /opt/exordio-starter.tar")
+            elif outcome is None or outcome.exit_code == 0:
+                initialize_blank(container)
             return outcome
         finally:
             preparation_seconds = time.monotonic() - start
@@ -495,18 +594,59 @@ def execute_trial(runner, campaign: dict, job: dict, destination: Path, limits) 
             raise ValueError("instruction differs from prepared campaign")
         return text
 
+    usage = []
+
+    def host_solve(container, invocation, **kwargs):
+        if smoke:
+            container.write_file(runner.CONTAINER_SUBMIT_PATH, b"CODINGBENCH_SUBMIT\n")
+            return runner.ExecResult(0)
+        from bench.subscription import solve
+
+        env = None
+        if prepared:
+            path = container.exec(
+                'printf "%s/bin:%s" "$(cat /etc/exordio-profile)" "$PATH"', timeout_sec=10
+            )
+            if path.exit_code:
+                raise RuntimeError("could not resolve the prepared environment")
+            env = {"PATH": path.tail.strip()}
+        return asyncio.run(
+            solve(
+                runner,
+                config["model"],
+                config["reasoning_effort"],
+                container,
+                usage=usage,
+                env=env,
+                **kwargs,
+            )
+        )
+
     print(f"Running {job['id']}", flush=True)
     try:
         with (
+            ExitStack() as hooks,
             patch.object(runner, "ensure_agent_image", return_value=image),
             patch.object(runner, "build_instruction", prompt),
             patch.object(runner, "_run_agent_setup", setup),
         ):
+            build_argv = runner.Container.build_run_argv
+
+            def labeled_argv(reference, **kwargs):
+                args = build_argv(reference, **kwargs)
+                if reference == image.agent_image_id:
+                    args[2:2] = ["--label", "ai.pydantic.workspace=true"]
+                return args
+
+            hooks.enter_context(
+                patch.object(runner.Container, "build_run_argv", staticmethod(labeled_argv))
+            )
+            hooks.enter_context(patch.object(runner, "_run_solve", host_solve))
             result = runner.run_trial(
                 Path(config["zero2repo"]) / "benchmark/cases" / job["case"],
-                backend="codex",
+                agent_spec_path=ROOT / "bench/agent.json",
                 model=config["model"],
-                out_dir=destination / "runs" / job["id"],
+                out_dir=destination / ("smoke" if smoke else "runs") / job["id"],
                 cache_root=destination / "cache",
                 limits=limits,
             ).to_dict()
@@ -518,13 +658,31 @@ def execute_trial(runner, campaign: dict, job: dict, destination: Path, limits) 
             "terminal_status": "error",
             "error": f"{type(exc).__name__}: {exc}",
         }
+    total_tokens = sum_known(usage)
+    result["token_usage"] = {
+        "complete": total_tokens is not None,
+        "total_tokens": total_tokens,
+        "cost_usd": None,
+    }
     result["preparation_seconds"] = preparation_seconds
     return result
+
+
+def subscription_smoke() -> None:
+    """Exercise the pilot's exact model and effort using host subscription credentials."""
+    from pydantic_ai import Agent
+
+    agent = Agent("openai-codex:gpt-6-luna", model_settings={"openai_reasoning_effort": "medium"})
+    result = agent.run_sync("Reply with OK.")
+    if result.output.strip() != "OK":
+        raise ValueError("subscription smoke returned an unexpected response")
+    print("Subscription model call succeeded.")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("subscription-smoke", help="make one local subscription model call")
     prepare_parser = commands.add_parser(
         "prepare", help="freeze inputs and smoke-test images; no API calls"
     )
@@ -535,6 +693,9 @@ def main() -> None:
     run_parser.add_argument("--execute", action="store_true")
     commands.add_parser("report").add_argument("destination", type=Path)
     args = parser.parse_args()
+    if args.command == "subscription-smoke":
+        subscription_smoke()
+        return
     destination = args.destination.resolve()
     try:
         if args.command == "prepare":

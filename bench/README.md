@@ -4,37 +4,23 @@ description: Compare blank Git and Exordio starters using pinned Zero2Repo cases
 
 # Zero2Repo comparison
 
-This maintainer-only adapter compares the same official Codex CLI agent starting
-from either `git init` or a generated Exordio project. It reuses
-[Zero2Repo](https://github.com/Gradient-Data/Zero2Repo) commit
-`c10b60ca3f2d9498a7e2dfea6b4a881037a0cccc`: public specifications, interface
-contracts, native execution and hidden acceptance tests. The primary score is
-Zero2Repo's binary reward, **not an LM judgment or a new weighted rubric**.
+This pilot compares blank Git and prepared Exordio projects on four pinned
+Zero2Repo cases using GPT-6 Luna, medium reasoning effort and the local
+ChatGPT subscription. The host runs Pydantic Coder with tools in the case
+container. Zero2Repo supplies the task, monitored solve and hidden judge.
+Three repetitions per case and arm produce 24 attempts.
 
-## Comparison
+The Python image applies Zero2Repo's own audit installer to its prepared interpreter.
+Preparation exercises an ordinary import and checks that the native monitor attributes
+a controlled access to Python. The TypeScript pilot remains blocked because Bun accepts
+an ES module import rejected by the native judge controls. All eight model-free
+case/arm checks must succeed before preparation publishes a campaign.
 
-| Arm | Initial `/app` |
-| --- | --- |
-| `blank` | Empty Git repository |
-| `exordio` | Pinned Copier output with the task's language selected, initialized in Git |
-
-Both arms receive the same task text, agent, model, reasoning effort, case image
-and budgets. The native prompt's empty-workspace wording is made neutral in both
-arms. Other task requirements and grading rules remain unchanged. Exordio selects
-only Python or TypeScript; planning, references, AgentSync and secrets are off.
-The agent can adapt the generated layout to the original public interface.
-
-The pilot selects Python `case001` and `case002`, and TypeScript `case003` and
-`case012`. Four tasks × two arms × three repetitions produces 24 attempts. The
-seed shuffles the complete plan; it does not make model responses deterministic.
-Attempts run sequentially with fresh agent sessions and workspaces.
-
-This measures **the generated scaffold in Zero2Repo's shared case runtime**.
-Preparation renders files but does not install Nix, enter `devenv shell` or run
-the starter's `just setup`. Both arms retain the native case toolchains and
-dependencies. It therefore does not measure the benefit of a prepared Exordio
-Nix environment, or the effort of asking an agent to discover and install Exordio.
-Generated Nix files remain available, but their commands may need adaptation.
+Preparation builds the language project at /app, initializes Git, installs
+the pinned Devenv, and runs setup. The benchmark records campaign preparation
+and agent solve times separately. The manifest freezes the [secondary review
+rubric](rubric.md) before collection. Per-case results retain individual
+repetitions, missing attempts, and invalid attempts.
 
 ## Prepare locally
 
@@ -51,11 +37,8 @@ git -C .cache/zero2repo checkout c10b60ca3f2d9498a7e2dfea6b4a881037a0cccc
 cp bench/config.example.json .cache/agentbench.json
 ```
 
-Edit `.cache/agentbench.json` to choose an explicit model identifier and exact
-published Codex CLI version. `SET_ME` values are rejected. `zero2repo` is resolved
-relative to the configuration file; the example therefore points at
-`.cache/zero2repo`. `template_ref` pins the template commit, independently of the
-adapter branch. Keep the supplied task set for the first pilot.
+The pilot fixes the subscription model and medium effort. Check host access with one model call
+using `just bench subscription-smoke`.
 
 ```bash
 just bench prepare .cache/agentbench.json .cache/campaigns/pilot
@@ -68,12 +51,10 @@ before spending model tokens. Preparation time is separate from agent time.
 
 ## Execute and inspect
 
-Configure `OPENAI_API_KEY` in the shell using the provider's normal mechanism;
-never put credentials in the JSON configuration. This uses the native Codex API
-runner; host CLI login is not mounted. Keep `OPENAI_BASE_URL` and
-`CBRUN_CODEX_GATEWAY_WEBSOCKETS` unchanged between preparation and execution.
-Other `CBRUN_*`, `CODINGBENCH_*` and `CODING_BENCH_*` overrides are cleared.
-Budgets bound agent wall time, inactivity and judge time; there is no token cap.
+Use your existing host Codex subscription login for the default model.
+The agent container receives workspace tools. The controller handles
+credentials and model requests. Subscription cost is reported as unknown.
+A setup or infrastructure failure saves diagnostics and stops the schedule.
 
 ```bash
 just bench run .cache/campaigns/pilot --execute
@@ -108,8 +89,7 @@ Native review flags are reported without changing the upstream reward.
 Use this small pilot to check the integration and identify task or environment
 failures. Four selected tasks do not establish general superiority. Results are
 an Exordio adaptation of Zero2Repo; the changed initial workspace prevents direct
-claims against its published leaderboard. A qualitative LM judge, a full Nix
-runtime treatment and a larger task suite are separate experiments.
+claims against its published leaderboard. Secondary qualitative scoring follows collection.
 
 ## Checks
 

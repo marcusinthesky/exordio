@@ -1,11 +1,6 @@
 {
   "zero2repo": "zero2repo",
   "template_ref": "2906348db90094c03cfccae49aa9daaa89973138",
-  "model": "SET_ME",
-  "codex_version": "SET_ME",
-  "reasoning_effort": "high",
-  "cases": ["case001", "case002", "case003", "case012"],
-  "repetitions": 3,
   "seed": 42,
   "agent_timeout_sec": 7200,
   "test_timeout_sec": 7200,

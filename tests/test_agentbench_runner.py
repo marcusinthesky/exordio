@@ -42,9 +42,14 @@ def campaign(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "plan": bench.schedule(["case001"], 1, 42),
         "prompts": {"case001": bench.instruction(native_prompt)},
         "seeds": {"python": bench.tree_identity(seed)},
-        "images": {"case001": {"image": image, "tests": bench.tree_identity(hidden.parent)}},
+        "images": {
+            "case001": {
+                "image": image,
+                "prepared_agent_image": "sha256:prepared",
+                "tests": bench.tree_identity(hidden.parent),
+            }
+        },
         "implementation": bench.implementation_identity(),
-        "provider": bench.provider_identity(),
         "host_arch": bench.platform.machine(),
     }
     bench.write_json(tmp_path / "campaign.json", data)
@@ -55,6 +60,8 @@ def campaign(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         cp_to=Mock(),
     )
     runner = SimpleNamespace(
+        Container=SimpleNamespace(build_run_argv=Mock()),
+        _run_solve=Mock(),
         AgentImage=SimpleNamespace,
         ensure_agent_image=Mock(side_effect=AssertionError("must reuse the frozen image")),
         build_instruction=Mock(return_value=native_prompt),
@@ -98,20 +105,21 @@ def test_both_arms_reuse_native_runner_and_differ_only_in_seed(campaign) -> None
     assert len(calls) == native_setup.call_count == 2
     for case, kwargs, prompt, image, copied in calls:
         assert case == Path(data["config"]["zero2repo"]) / "benchmark/cases/case001"
-        assert kwargs["backend"] == "codex" and kwargs["model"] == "model-snapshot"
+        assert (
+            kwargs["agent_spec_path"] == bench.ROOT / "bench/agent.json"
+            and kwargs["model"] == "model-snapshot"
+        )
         assert kwargs["limits"] == {
             "agent_timeout_sec": 7200,
             "test_timeout_sec": 7200,
             "stall_window_sec": 2100,
         }
         assert prompt == data["prompts"]["case001"]
-        assert image.agent_image_id == "sha256:agent"
-        assert image.deliverable_image == "sha256:deliverable"
-        names = {call.args[0].name for call in copied}
-        assert names == (
-            {"README.md", ".gitignore"} if kwargs["out_dir"].name.endswith("exordio") else set()
+        expected = (
+            "sha256:prepared" if kwargs["out_dir"].name.endswith("exordio") else "sha256:agent"
         )
-        assert all(call.args[1] == "/app/" for call in copied)
+        assert image.agent_image_id == expected
+        assert not copied
         result = bench.read_json(kwargs["out_dir"] / "trial.json")
         assert result["reward"] == 0 and result["error"] == "missing submission"
         assert bench.valid(result)
@@ -140,10 +148,13 @@ def test_runner_exception_is_retained_and_patches_are_restored(campaign) -> None
 def test_native_setup_failure_is_not_a_model_failure(campaign) -> None:
     destination, _, runner, calls = campaign
     runner._run_agent_setup.return_value = SimpleNamespace(exit_code=1, tail="auth setup failed")
-    bench.run(destination, execute=True)
+    with pytest.raises(ValueError, match="invalid attempt"):
+        bench.run(destination, execute=True)
+    assert len(calls) == 1
     assert all(not copied for _, _, _, _, copied in calls)
     summary = bench.read_json(destination / "summary.json")
-    assert all(arm["invalid"] == 1 and arm["failed"] == 0 for arm in summary["arms"].values())
+    assert sum(arm["invalid"] for arm in summary["arms"].values()) == 1
+    assert sum(arm["missing"] for arm in summary["arms"].values()) == 1
 
 
 def test_default_run_needs_no_credentials_or_execution(campaign, monkeypatch, capsys) -> None:
@@ -185,3 +196,38 @@ def test_campaign_lock_rejects_concurrent_execution(campaign) -> None:
         with pytest.raises(ValueError, match="already running"):
             bench.run(destination, execute=True)
     runner.run_trial.assert_not_called()
+
+
+def test_subscription_uses_prepared_image_and_host_agent_spec(campaign, monkeypatch) -> None:
+    destination, data, runner, _ = campaign
+    config = data["config"]
+    config.update(
+        protocol="prepared-subscription", model="openai-codex:gpt-6-luna", reasoning_effort="medium"
+    )
+    monkeypatch.delenv("OPENAI_API_KEY")
+    data["images"]["case001"]["prepared_agent_image"] = "sha256:prepared"
+    runner.Container = SimpleNamespace(build_run_argv=lambda image: ["docker", "run", image])
+    runner._run_solve = Mock()
+
+    def trial(case, **kwargs):
+        assert kwargs["agent_spec_path"] == bench.ROOT / "bench/agent.json"
+        assert kwargs["model"] == config["model"]
+        image = runner.ensure_agent_image()
+        assert image.agent_image_id == "sha256:prepared"
+        assert runner.Container.build_run_argv(image.agent_image_id) == [
+            "docker",
+            "run",
+            "--label",
+            "ai.pydantic.workspace=true",
+            "sha256:prepared",
+        ]
+        assert runner.Container.build_run_argv(image.deliverable_image) == [
+            "docker",
+            "run",
+            "sha256:deliverable",
+        ]
+        return SimpleNamespace(to_dict=lambda: {"run_valid": True, "setup_ok": True, "reward": 0})
+
+    runner.run_trial.side_effect = trial
+    job = next(job for job in data["plan"] if job["arm"] == "exordio")
+    assert bench.valid(bench.execute_trial(runner, data, job, destination, {}))

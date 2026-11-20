@@ -9,14 +9,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from bench.run import configuration, instruction, render_seed, schedule, seed_workspace, summarize
+from bench.run import configuration, initialize_blank, instruction, render_seed, schedule, summarize
 from tests.support import ROOT, answers, git
 
 
 @pytest.fixture
 def config_file(tmp_path: Path) -> Path:
     data = json.loads((ROOT / "bench/config.example.json").read_text())
-    data.update(model="model-snapshot", codex_version="0.100.0")
     path = tmp_path / "config.json"
     path.write_text(json.dumps(data))
     return path
@@ -26,8 +25,8 @@ def test_configuration_resolves_upstream_relative_to_its_file(config_file: Path)
     config = configuration(config_file)
     assert Path(config["zero2repo"]) == config_file.parent / "zero2repo"
     assert config["cases"] == ["case001", "case002", "case003", "case012"]
-    assert config["model"] == "model-snapshot"
-    assert config["codex_version"] == "0.100.0"
+    assert config["model"] == "openai-codex:gpt-6-luna"
+    assert config["reasoning_effort"] == "medium"
 
 
 @pytest.mark.parametrize(
@@ -124,33 +123,14 @@ class Container:
 
 def test_blank_workspace_is_initialized_without_copied_files() -> None:
     container = Container()
-    seed_workspace(container, None)
+    initialize_blank(container)
     assert all(event[0] == "exec" for event in container.events)
-    assert "git" in str(container.events[-1]) and "init" in str(container.events[-1])
-
-
-def test_exordio_seed_includes_dotfiles_before_git_initialization(tmp_path: Path) -> None:
-    (tmp_path / "src").mkdir()
-    (tmp_path / "README.md").write_text("Starter.\n")
-    (tmp_path / ".copier-answers.yml").write_text("languages: [python]\n")
-    container = Container()
-    seed_workspace(container, tmp_path)
-    copied = [event for event in container.events if event[0] == "copy"]
-    assert copied == [("copy", path, "/app/") for path in sorted(tmp_path.iterdir())]
-    assert container.events[0][0] == "exec"
-    assert container.events[-1][0] == "exec"
     assert "git" in str(container.events[-1]) and "init" in str(container.events[-1])
 
 
 def test_workspace_failure_is_not_treated_as_a_successful_seed() -> None:
     with pytest.raises(RuntimeError):
-        seed_workspace(Container(exit_code=1), None)
-
-
-def test_seed_cannot_import_repository_history(tmp_path: Path) -> None:
-    (tmp_path / ".git").mkdir()
-    with pytest.raises((ValueError, RuntimeError)):
-        seed_workspace(Container(), tmp_path)
+        initialize_blank(Container(exit_code=1))
 
 
 @pytest.mark.parametrize("language", ["python", "typescript"])

@@ -26,7 +26,7 @@ test-parallel *args:
 
 # Prepare, run or report the optional Zero2Repo comparison.
 bench *args:
-    {{ uv }} --group bench python bench/run.py "$@"
+    {{ uv }} --group bench python -m bench.run "$@"
 
 # Validate sources, generated projects and documentation.
 check:
