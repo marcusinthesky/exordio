@@ -13,6 +13,11 @@ export default defineConfig({
   ],
   test: {
     name: "stories",
+    // Storybook requires explicit write access for failure attachments, on loopback only.
+    api: { host: "127.0.0.1", allowWrite: true, allowExec: false },
+    attachmentsDir: fileURLToPath(
+      new URL("../../test-results/stories/", import.meta.url),
+    ),
     setupFiles: ["./.storybook/vitest.setup.ts"],
     browser: {
       enabled: true,

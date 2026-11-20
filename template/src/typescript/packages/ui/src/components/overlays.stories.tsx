@@ -105,7 +105,10 @@ function Overlays() {
           </PopoverContent>
         </Popover>
         <Tooltip>
-          <TooltipTrigger render={<Button variant="ghost" />}>
+          <TooltipTrigger
+            aria-label="Help: keyboard shortcuts and quick help"
+            render={<Button variant="ghost" />}
+          >
             Help
           </TooltipTrigger>
           <TooltipContent>Keyboard shortcuts and quick help</TooltipContent>
@@ -163,9 +166,12 @@ export const Default: Story = {
     await waitFor(() => expect(popover).not.toBeInTheDocument());
     await waitFor(() => expect(popoverTrigger).toHaveFocus());
 
-    const tooltipTrigger = canvas.getByRole("button", { name: "Help" });
+    const tooltipTrigger = canvas.getByRole("button", {
+      name: "Help: keyboard shortcuts and quick help",
+    });
     await userEvent.hover(tooltipTrigger);
-    const tooltip = await body.findByRole("tooltip");
+    // Base UI tooltips are visual labels; the trigger carries the accessible name.
+    const tooltip = await body.findByText("Keyboard shortcuts and quick help");
     await waitFor(() => expect(tooltip).toBeVisible());
     await userEvent.unhover(tooltipTrigger);
     await waitFor(() => expect(tooltip).not.toBeInTheDocument());

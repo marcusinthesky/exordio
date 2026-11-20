@@ -85,6 +85,14 @@ test("authentication, persisted projects, ownership, and logout", async ({
     .getByRole("dialog")
     .getByRole("button", { name: "Delete project", exact: true })
     .click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: `Edit ${renamed}`, exact: true }),
+  ).toBeHidden();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Projects", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: `Edit ${renamed}`, exact: true }),
   ).toBeHidden();
