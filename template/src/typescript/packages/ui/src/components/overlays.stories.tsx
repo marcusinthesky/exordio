@@ -126,23 +126,49 @@ export const Default: Story = {
   async play({ canvasElement }) {
     const canvas = within(canvasElement);
     const body = within(canvasElement.ownerDocument.body);
-    const trigger = canvas.getByRole("button", { name: "Open dialog" });
-    await userEvent.click(trigger);
-    await expect(
-      await body.findByRole("dialog", { name: "Keep changes?" }),
-    ).toBeVisible();
+    const dialogTrigger = canvas.getByRole("button", { name: "Open dialog" });
+    await userEvent.click(dialogTrigger);
+    const dialog = await body.findByRole("dialog", { name: "Keep changes?" });
+    await waitFor(() => expect(dialog).toBeVisible());
     await userEvent.keyboard("{Escape}");
-    await waitFor(() =>
-      expect(
-        body.queryByRole("dialog", { name: "Keep changes?" }),
-      ).not.toBeInTheDocument(),
-    );
-    await expect(trigger).toHaveFocus();
-    await userEvent.click(canvas.getByRole("button", { name: "Project menu" }));
-    await expect(
-      await body.findByRole("menuitem", { name: "Edit project" }),
-    ).toBeVisible();
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    await waitFor(() => expect(dialogTrigger).toHaveFocus());
+
+    const sheetTrigger = canvas.getByRole("button", { name: "Open panel" });
+    await userEvent.click(sheetTrigger);
+    const sheet = await body.findByRole("dialog", { name: "Project details" });
+    await waitFor(() => expect(sheet).toBeVisible());
     await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(sheet).not.toBeInTheDocument());
+    await waitFor(() => expect(sheetTrigger).toHaveFocus());
+
+    const menuTrigger = canvas.getByRole("button", { name: "Project menu" });
+    await userEvent.click(menuTrigger);
+    const menu = await body.findByRole("menu");
+    const menuItem = within(menu).getByRole("menuitem", {
+      name: "Edit project",
+    });
+    await waitFor(() => expect(menuItem).toBeVisible());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(menu).not.toBeInTheDocument());
+    await waitFor(() => expect(menuTrigger).toHaveFocus());
+
+    const popoverTrigger = canvas.getByRole("button", { name: "Show details" });
+    await userEvent.click(popoverTrigger);
+    const popover = await body.findByRole("dialog", {
+      name: "Working together",
+    });
+    await waitFor(() => expect(popover).toBeVisible());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(popover).not.toBeInTheDocument());
+    await waitFor(() => expect(popoverTrigger).toHaveFocus());
+
+    const tooltipTrigger = canvas.getByRole("button", { name: "Help" });
+    await userEvent.hover(tooltipTrigger);
+    const tooltip = await body.findByRole("tooltip");
+    await waitFor(() => expect(tooltip).toBeVisible());
+    await userEvent.unhover(tooltipTrigger);
+    await waitFor(() => expect(tooltip).not.toBeInTheDocument());
   },
 };
 

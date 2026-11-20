@@ -17,6 +17,10 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
+      screenshotFailures: true,
+      screenshotDirectory: fileURLToPath(
+        new URL("../../test-results/stories/", import.meta.url),
+      ),
       provider: playwright({
         launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
           ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }

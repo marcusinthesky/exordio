@@ -15,7 +15,8 @@
     "Replace registry-only class markers with portable Tailwind utilities.",
     "Explicit label forwarding, semantic current breadcrumbs and field wrappers, and stable unique validation error keys.",
     "Match slider thumb count to scalar or array values, including the default value.",
-    "Use the semantic muted-foreground token for inactive tabs instead of transparent foreground text to preserve accessible contrast."
+    "Use the semantic muted-foreground token for inactive tabs instead of transparent foreground text to preserve accessible contrast.",
+    "Target Recharts cartesian-axis-tick-value directly so the semantic tick color applies after Recharts 3.11 moved labels outside the tick group."
   ],
   "components": [
     {

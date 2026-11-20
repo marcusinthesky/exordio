@@ -29,12 +29,14 @@ export function AppShell({
   const [open, setOpen] = useState(false);
   return (
     <div className="min-h-dvh bg-background">
-      <a
-        href="#main-content"
-        className="sr-only fixed top-3 left-3 z-[100] rounded-lg bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only"
-      >
-        Skip to content
-      </a>
+      <nav aria-label="Skip navigation">
+        <a
+          href="#main-content"
+          className="sr-only fixed top-3 left-3 z-[100] rounded-lg bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only"
+        >
+          Skip to content
+        </a>
+      </nav>
       <aside className="fixed inset-y-0 left-0 hidden w-(--sidebar-width) flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex h-16 items-center border-b px-6 font-semibold tracking-tight">
           {brand}
